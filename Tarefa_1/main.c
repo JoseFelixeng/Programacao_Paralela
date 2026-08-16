@@ -1,4 +1,3 @@
-// Online C compiler to run C program online
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
@@ -8,8 +7,7 @@
 long double calcularPiLeibniz(int interacao) {
     long double pi = 0.0L; // 0.0L serve para que o compilador trate como o argumento long double
     long double termo;
-    int i;
-    for (i = 0; i < interacao; i++) {
+    for (int i = 0; i < interacao; i++) {
         if (i % 2 == 0) {
             // Somar apenas os termos positivos
             termo = 1.0 / (2 * i + 1);
