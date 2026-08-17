@@ -4,14 +4,14 @@
 
 double *alocarMatriz(int n){
   double *m = malloc((size_t)n * n * sizeof(double));
-  for(int i = 0; i < n; i++){
+  for(int i = 0; i < n*n; i++){
     m[i] = (double)(rand() % 100) / 7.0;
   }
   return m;
 }
 
 double *alocarVetor(int n){
-  double *v = malloc((size_t)n * n * sizeof(double));
+  double *v = malloc((size_t)n * sizeof(double));
   for(int i = 0; i < n; i++){
     v[i] = (double)(rand() % 100) / 7.0;
   }
@@ -19,8 +19,8 @@ double *alocarVetor(int n){
 }
 
 void majorRow(double *A, double *x, double *y, int n){
-  double soma = 0.0;
   for(int i = 0; i < n; i++){
+      double soma = 0.0;
       for(int j = 0; j < n; j++){
         soma += A[i * n + j] * x[j];
       } 
@@ -44,7 +44,7 @@ void majorColumn(double *A, double *x, double *y, int n){
   }
   for(int j =0; j < n; j++){
     for(int i =0; i < n; i++){
-      y[i] = A[i* n + j] * x[j];
+      y[i] += A[i* n + j] * x[j];
     }
   }
 }
@@ -71,6 +71,7 @@ int main(){
     } else {
         reps = 2;
     }
+    
     double tLinhas = 1e18;
     double tColunas = 1e18;
 

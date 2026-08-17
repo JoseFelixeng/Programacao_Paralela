@@ -23,13 +23,15 @@ long double calcularPiLeibniz(int interacao) {
 int main(void) {
     struct timespec inicioIteracao, fimIteracao;
     struct timespec inicioTotal, fimTotal;
+    
     const double pi_real = M_PI;
-    int listaDeIteracoes[] = {10, 100, 1000, 10000, 100000, 300000, 500000, 750000, 950000, 1000000};
+    
+    int listaDeIteracoes[] = {10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000};
+    
     int n = sizeof(listaDeIteracoes) / sizeof(listaDeIteracoes[0]);
     int j;
 
-    printf("%-15s %-22s %-18s %-15s\n",
-           "Iteracoes", "Pi aproximado", "Erro absoluto", "Walltime (s)");
+    printf("%-15s %-22s %-18s %-15s\n", "Iteracoes", "Pi aproximado", "Erro absoluto", "Walltime (s)");
     printf("--------------------------------------------------------------------\n");
 
     clock_gettime(CLOCK_MONOTONIC, &inicioTotal);
@@ -43,17 +45,13 @@ int main(void) {
         clock_gettime(CLOCK_MONOTONIC, &fimIteracao);
 
         long double erro = fabsl(pi_real - piCalculado);
-        double tempoIteracao = (fimIteracao.tv_sec - inicioIteracao.tv_sec) +
-                                (fimIteracao.tv_nsec - inicioIteracao.tv_nsec) / 1e9;
+        double tempoIteracao = (fimIteracao.tv_sec - inicioIteracao.tv_sec) + (fimIteracao.tv_nsec - inicioIteracao.tv_nsec) / 1e9;
 
-        printf("%-15d %-22.15Lf %-18.15Lf %-15.6f\n",
-               interacao, piCalculado, erro, tempoIteracao);
+        printf("%-15d %-22.15Lf %-18.15Lf %-15.6f\n",interacao, piCalculado, erro, tempoIteracao);
     }
 
     clock_gettime(CLOCK_MONOTONIC, &fimTotal);
-
-    double tempoTotal = (fimTotal.tv_sec - inicioTotal.tv_sec) +
-                         (fimTotal.tv_nsec - inicioTotal.tv_nsec) / 1e9;
+    double tempoTotal = (fimTotal.tv_sec - inicioTotal.tv_sec) + (fimTotal.tv_nsec - inicioTotal.tv_nsec) / 1e9;
 
     printf("--------------------------------------------------------------------\n");
     printf("Tempo total (walltime) para todas as iteracoes: %.6f s\n", tempoTotal);
