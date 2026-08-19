@@ -30,9 +30,11 @@ void majorRow(double *A, double *x, double *y, int n){
 
 double medirTempo(void (*func)(double*, double*, double*, int), double *A, double *x, double *y, int n){
   struct timespec inicio, fim; 
+  
   clock_gettime(CLOCK_MONOTONIC, &inicio);
   func(A, x, y,n);
   clock_gettime(CLOCK_MONOTONIC, &fim);
+  
   double tempo = (fim.tv_sec - inicio.tv_sec) + (fim.tv_nsec - inicio.tv_nsec) / 1e9;
 
   return tempo;
@@ -50,23 +52,30 @@ void majorColumn(double *A, double *x, double *y, int n){
 }
 
 int main(){
-  int tamanho[] = {32, 64, 128, 256, 512, 1024, 2048, 4096};
-  int n_tamanho = sizeof(tamanho)/ sizeof(tamanho[0]);
+  int n_min = 32;
+  int n_max = 2048;
+  int passo = 32;
 
+    FILE *arquivo = fopen("resultados.csv", "w");
+
+    if (arquivo == NULL) {
+        printf("Erro ao criar o arquivo CSV.\n");
+        return 1;
+    }
+  fprintf(arquivo, "N,Linhas (s),Colunas (s),Razao (Col/Lin)\n");
   printf("%-10s %-18s %-18s %-12s\n", "N", "Linhas (s)", "Colunas (s)", "Razao (Col/Lin)");
   printf("--------------------------------------------------------------\n");
 
-  for(int k = 0; k < n_tamanho; k++){
-    int n = tamanho[k]; 
-    double *A = alocarMatriz(n);
-    double *x = alocarVetor(n);
-    double *yl = malloc(n * sizeof(double));
-    double *yc = malloc(n * sizeof(double));
+  for(int k = n_min; k <= n_max; k += passo){
+    double *A = alocarMatriz(k);
+    double *x = alocarVetor(k);
+    double *yl = malloc(k * sizeof(double));
+    double *yc = malloc(k * sizeof(double));
 
     int reps;
-    if (n <= 512) {
+    if (k <= 512) {
         reps = 20;
-    } else if (n <= 1024) {
+    } else if (k <= 1024) {
         reps = 5;
     } else {
         reps = 2;
@@ -76,23 +85,35 @@ int main(){
     double tColunas = 1e18;
 
     for (int m = 0; m < reps; m++){
-      double testRow = medirTempo(majorRow, A, x, yl, n);
+      double testRow = medirTempo(majorRow, A, x, yl, k);
       if(testRow < tLinhas){
         tLinhas = testRow;
       }
     }
 
     for (int m = 0; m < reps; m++){
-      double testColumn = medirTempo(majorColumn, A, x, yc, n);
+      double testColumn = medirTempo(majorColumn, A, x, yc, k);
       if(testColumn < tColunas){
         tColunas = testColumn;
       }
     }
-    printf("%-10d %-18.6f %-18.6f %-12.2f\n", n, tLinhas, tColunas, tColunas/tLinhas);
+    
+    double razao = tColunas / tLinhas;
+    // Mostra no terminal
+    printf("%-10d %-18.6f %-18.6f %-12.2f\n", k, tLinhas, tColunas, razao);
+
+    // Salva no CSV
+    fprintf(arquivo, "%d,%.6f,%.6f,%.2f\n", k, tLinhas, tColunas, razao);
+
     free(A); 
     free(x); 
     free(yl); 
     free(yc);
   }
+
+  // Fechar o arquivo
+  fclose(arquivo);
+  printf("\nResultados salvos em resultados.csv\n");
+
   return 0;
 }
