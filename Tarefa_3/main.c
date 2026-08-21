@@ -22,6 +22,7 @@ int main(void) {
         }
     }
     double tf1 = medirTempo();
+   
     printf("Laco 1  %.4f s\n", (tf1 - ti1) / REPS);
 
     // Laço 2: soma acumulativa 
@@ -34,7 +35,7 @@ int main(void) {
         }
     }
     double tf2 = medirTempo();
-    printf("Laco 2 (soma serial)..........: %.4f s  (soma = %.3f)\n", (tf2 - ti2) / REPS, somaAcumulativa);
+    printf("Laco 2 (Soma Acumulada)..........: %.4f s  (soma = %.3f)\n", (tf2 - ti2) / REPS, somaAcumulativa);
 
     //Laço 3
     double somaQuebrada = 0.0;
@@ -54,7 +55,7 @@ int main(void) {
         somaQuebrada = (s0 + s1) + (s2 + s3);
     }
     double tf3 = medirTempo();
-    printf("Laco 3 (soma c/ 4 acumuladores): %.4f s  (soma = %.3f)\n", (tf3 - ti3) / REPS, somaQuebrada);
+    printf("Laco 3 (Soma Quebrada em 4 partes): %.4f s  (soma = %.3f)\n", (tf3 - ti3) / REPS, somaQuebrada);
 
     printf("\nDiferenca somaAcumulativa - somaQuebrada = %g (esperado ~0, so erro de arredondamento)\n",
            somaAcumulativa - somaQuebrada);
