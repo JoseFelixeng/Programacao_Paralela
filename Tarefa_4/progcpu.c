@@ -28,7 +28,7 @@ int main(void){
   for(int i = 0; i < TAM; i++){
     double acumulador = 0.0;
     for(int j = 0; j < ITER; j++){
-      acumulador += sin(X[i]) * cos(Y[j]);
+      acumulador += (sin(X[i]) * cos(Y[j])) + sqrt(X[i] + Y[j]);
     }
     Z[i] = acumulador;
   }

@@ -3,7 +3,7 @@
 #include <omp.h>
 #include <math.h>
 
-#define TAM 1000000
+#define TAM 100000000
 
 int main(void){
   double *X = malloc(TAM * sizeof(double));
@@ -18,7 +18,7 @@ int main(void){
 
 
   double inicio = omp_get_wtime();
-
+  
   #pragma omp parallel for
   for(int i = 0; i < TAM; i++){
     Z[i] = X[i] + Y[i];
@@ -26,7 +26,12 @@ int main(void){
   
   double fim = omp_get_wtime();
 
-  printf("Tempo progcpu.c: %f (s) | threads=%d\n", fim - inicio, omp_get_max_threads());
+  double soma = 0.0;
+  for(int i = 0; i < TAM; i++){
+    soma += Z[i];
+  }
+
+  printf("Tempo progcpu.c: %f (s) | threads=%d  | Valor da soma(Z)=%e\n", fim - inicio, omp_get_max_threads(), soma);
 
   free(X);
   free(Y);
@@ -34,3 +39,5 @@ int main(void){
 
   return 0; 
 }
+
+
