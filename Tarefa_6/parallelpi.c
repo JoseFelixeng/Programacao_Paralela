@@ -11,16 +11,20 @@ int main(){
     srand((unsigned int)time(NULL));
 
     double inicio = omp_get_wtime();
-   #pragma omp parallel for
-    for(long long i = 0; i < N; i++){
+   #pragma omp parallel 
+   {
+        #pragma omp for   
+        for(long long i = 0; i < N; i++){
         //Gear as coordenadas de x e y entre 0 e 1
         x = (double)rand()/RAND_MAX;
         y = (double)rand()/RAND_MAX;
 
         if((x*x)+(y*y) <= 1.0){
+            #pragma omp critical
             pontos_dentro++;
         }
     }
+   }
     double fim = omp_get_wtime();
 
     double pi_estimado = 4.0 * ((double)pontos_dentro / N);
