@@ -7,16 +7,14 @@ int main(){
     long long N = 10000000;
     long long pontos_dentro = 0;
     long long ultimo = -1;
-    double x,y;
-    
+    double x = 0.0,y = 0;
+
     srand((unsigned int)time(NULL));
 
    double inicio = omp_get_wtime();
    #pragma omp parallel default(none) shared(N, pontos_dentro, ultimo) firstprivate(x,y)
    {
-        
         long long local_dento_c = 0;
-        
 
         #pragma omp for lastprivate(ultimo)  
         for(long long i = 0; i < N; i++){

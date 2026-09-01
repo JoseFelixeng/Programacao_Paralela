@@ -14,7 +14,7 @@ int main(){
 
 
    double inicio = omp_get_wtime();
-  #pragma omp parallel 
+  #pragma omp parallel shared(N, pontos_dentro)
   {
        #pragma omp for  
        for(long long i = 0; i < N; i++){
