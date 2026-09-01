@@ -24,7 +24,8 @@ int main(){
             x = (double)rand_r(&seed)/RAND_MAX;
             y = (double)rand_r(&seed)/RAND_MAX;
 
-            if((x*x)+(y*y) <= 1.0){
+            if ((x * x) + (y * y) <= 1.0)
+            {
                 local_dento_c++;
             }
             ultimo_i = i;
