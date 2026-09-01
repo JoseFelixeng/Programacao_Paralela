@@ -8,6 +8,7 @@ int main(){
     long long pontos_dentro = 0;
     long long ultimo = -1;
     double x,y;
+    
     srand((unsigned int)time(NULL));
 
    double inicio = omp_get_wtime();
