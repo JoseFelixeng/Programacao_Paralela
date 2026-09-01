@@ -11,7 +11,7 @@ int main(){
     srand((unsigned int)time(NULL));
 
    double inicio = omp_get_wtime();
-   #pragma omp parallel default(none) shared(N, pontos_dentro, ultimo) firstprivate(x,y)
+   #pragma omp parallel
    {
         
         long long local_dento_c = 0;
