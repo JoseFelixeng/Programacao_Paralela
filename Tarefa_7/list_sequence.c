@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <omp.h>
 #include <string.h>
-#include <time.h>
 
 #define TAM_NOME 100
 
@@ -59,7 +58,7 @@ void liberar(No *cabeca){
     }
 }
 
-void print(const No *no){
+void processar(const No *no){
     printf("Nome: %25s | thread: %d\n", no->nome, omp_get_thread_num());
 }
 
@@ -99,7 +98,7 @@ int main(){
 
     No *atual = lista;
     while(atual != NULL){
-        print(atual);
+        processar(atual);
         atual = atual->prox;
     }
 

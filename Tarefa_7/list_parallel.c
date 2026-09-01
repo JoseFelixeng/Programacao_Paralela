@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <omp.h>
 #include <string.h>
-#include <time.h>
 
 #define TAM_NOME 100
 
@@ -59,7 +58,7 @@ void liberar(No *cabeca){
     }
 }
 
-void print(const No *no){
+void processar(const No *no){
     printf("Nome: %25s | thread: %d\n", no->nome, omp_get_thread_num());
 }
 
@@ -99,17 +98,25 @@ int main(){
 
     #pragma omp parallel 
     {
-      
-        No *atual = lista;
-        
-        while(atual != NULL){
-            print(atual);
+        #pragma omp single
+        {
+          No *atual = lista;
+          
+          while(atual != NULL){
+            No *no = atual;
+            #pragma omp task firstprivate(no)
+            {
+                processar(no);
+            }
             atual = atual->prox;
+          }
+          #pragma omp taskwait
         }
-
-        liberar(lista);
         
     }
+
+    liberar(lista);
+    
     return 0;
 }
 
