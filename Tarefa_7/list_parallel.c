@@ -98,7 +98,7 @@ int main(){
 
     #pragma omp parallel 
     {
-        #pragma omp single
+        //#pragma omp single
         {
           No *atual = lista;
           
