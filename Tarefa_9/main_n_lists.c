@@ -64,7 +64,7 @@ int main(int argc, char *argv[]){
     int N = (argc > 1) ? atoi(argv[1]): 20;
     int M = (argc > 2) ? atoi(argv[2]): 2;
 
-    printf("Quantidade de numeros: %d \n | Numero de Listas: %d", N, M);
+    printf("Quantidade de numeros: %d | Numero de Listas: %d \n", N, M);
 
     No **listas = (No **) calloc(M, sizeof(No *));
     omp_lock_t *locks = (omp_lock_t *) malloc(M * sizeof(omp_lock_t));
