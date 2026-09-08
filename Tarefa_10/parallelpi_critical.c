@@ -9,8 +9,6 @@ int main(){
     long long ultimo = -1;
     double x = 0.0,y = 0;
 
-    
-
    double inicio = omp_get_wtime();
    #pragma omp parallel default(none) shared(N, pontos_dentro, ultimo) firstprivate(x,y)
    {
