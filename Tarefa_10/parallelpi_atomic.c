@@ -7,7 +7,7 @@ int main(){
     long long N = 10000000;
     long long pontos_dentro = 0;
     long long ultimo = -1;
-    double x = 0.0,y = 0;
+    double x = 0.0,y = 0.0;
 
     
 

@@ -12,11 +12,10 @@ int main(){
    double inicio = omp_get_wtime();
    #pragma omp parallel default(none) shared(N, pontos_dentro, ultimo) firstprivate(x,y)
    {
-        long long local_dento_c = 0;
         int tid = omp_get_thread_num();
         unsigned int seed = (unsigned int)time(NULL) ^ tid; 
 
-        #pragma omp for lastprivate(ultimo)  
+        #pragma omp for lastprivate(ultimo)  reduction(+:pontos_dentro)
         for(long long i = 0; i < N; i++){
         //Gear as coordenadas de x e y entre 0 e 1
             x = (double)rand_r(&seed)/RAND_MAX;
@@ -24,12 +23,10 @@ int main(){
 
             if ((x * x) + (y * y) <= 1.0)
             {
-                local_dento_c++;
+                pontos_dentro++;
             }
             ultimo = i;
-        }
-        #pragma omp critical 
-        pontos_dentro += local_dento_c;
+        }  
    }
 
     double fim = omp_get_wtime();
