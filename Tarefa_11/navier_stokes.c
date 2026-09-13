@@ -1,279 +1,204 @@
-/*
- * ============================================================================
- * Simulação da equação de Navier-Stokes considerando APENAS viscosidade
- * ============================================================================
- *
- * Equação de Navier-Stokes completa (incompressível):
- *
- *   du/dt + (u . grad)u = -grad(p)/rho + nu * laplaciano(u) + f
- *
- * Neste programa desconsideramos:
- *   - o termo advectivo (u . grad)u
- *   - o gradiente de pressão (-grad(p)/rho)
- *   - forças externas (f)
- *
- * Restando apenas o termo de difusão viscosa:
- *
- *   du/dt = nu * laplaciano(u)
- *   dv/dt = nu * laplaciano(v)
- *
- * que é exatamente a equação do calor (difusão) aplicada a cada componente
- * do campo de velocidade (u, v). Discretizamos o espaço com diferenças
- * finitas centradas de 2ª ordem em uma malha 2D com condições de contorno
- * periódicas, e o tempo com Euler explícito.
- *
- * Estrutura do programa:
- *   1. Fluido parado (u=v=0)      -> verifica que o campo permanece estável
- *   2. Fluido com velocidade const -> verifica que o campo permanece estável
- *   3. Perturbação gaussiana local -> observa a difusão suave no tempo
- *
- * Compilação:
- *   gcc -O2 -Wall -o navier_stokes_viscosidade navier_stokes_viscosidade.c -lm
- *
- * Execução:
- *   ./navier_stokes_viscosidade
- *
- * Saída:
- *   - Estatísticas impressas no terminal (max|u|, energia cinética)
- *   - Arquivos CSV "snapshot_XXXX.csv" com o campo u(x,y) em instantes
- *     selecionados da fase de perturbação, para visualização posterior
- *     (ex.: Python + matplotlib.imshow / heatmap).
- * ============================================================================
- */
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>     /* int32_t */
+#include <omp.h>
 #include <math.h>
-#include <string.h>
+#include <sys/stat.h>   /* mkdir */
 
-/* ---------------------------- Parâmetros ---------------------------------*/
-
-#define NX 100          /* pontos da malha em x */
-#define NY 100          /* pontos da malha em y */
-#define DX 1.0          /* espaçamento da malha em x */
-#define DY 1.0          /* espaçamento da malha em y */
-#define NU 0.1          /* viscosidade cinemática */
-
-/* Número de passos de tempo em cada fase */
-#define STEPS_ESTAVEL      500   /* fases 1 e 2 (verificação de estabilidade) */
-#define STEPS_PERTURBACAO 2000   /* fase 3 (difusão da perturbação) */
-
-/* A cada quantos passos imprimir estatísticas / salvar snapshot */
-#define INTERVALO_LOG        50
-#define INTERVALO_SNAPSHOT  200
-
-/* Fator de segurança sobre o limite de estabilidade (0 < FATOR_CFL <= 1) */
-#define FATOR_CFL 0.5
-
-/* ---------------------------------------------------------------------- */
-
-typedef struct {
-    double u[NX][NY];   /* componente x da velocidade */
-    double v[NX][NY];   /* componente y da velocidade */
-} Campo;
-
-/* Índice periódico (condição de contorno periódica) */
-static inline int idx_periodico(int i, int n) {
-    if (i < 0) return i + n;
-    if (i >= n) return i - n;
-    return i;
-}
-
-/* Inicializa o fluido parado: u = v = 0 em todo o domínio */
-void inicializar_parado(Campo *c) {
-    memset(c->u, 0, sizeof(c->u));
-    memset(c->v, 0, sizeof(c->v));
-}
-
-/* Inicializa o fluido com velocidade constante (escoamento uniforme) */
-void inicializar_constante(Campo *c, double u0, double v0) {
-    for (int i = 0; i < NX; i++)
-        for (int j = 0; j < NY; j++) {
-            c->u[i][j] = u0;
-            c->v[i][j] = v0;
-        }
-}
-
-/*
- * Adiciona uma perturbação gaussiana localizada ao campo de velocidade
- * (soma-se ao valor já existente, para poder perturbar um fluido em
- * repouso ou em movimento uniforme).
+/* ---------------------------------------------------------------------------
+ * Simulacao de Navier-Stokes considerando APENAS viscosidade, em 3D:
  *
- * amplitude: intensidade máxima da perturbação
- * largura:   desvio padrão (sigma) da gaussiana, em pontos de malha
- */
-void adicionar_perturbacao(Campo *c, double amplitude, double largura) {
-    int cx = NX / 2;
-    int cy = NY / 2;
+ *     du/dt = ALFA * (d2u/dx2 + d2u/dy2 + d2u/dz2)
+ *
+ * Diferencas finitas centradas (7 pontos) no espaco + Euler explicito no
+ * tempo, no mesmo formato do template com omp.h/omp_get_wtime (arrays
+ * globais u/u_next, funcao separada de copia) -- so que com as 3 fases que
+ * o enunciado pede:
+ *   1) fluido parado        -> verifica que o campo continua estavel (u=0)
+ *   2) velocidade constante -> verifica que o campo continua estavel
+ *   3) perturbacao local    -> observa se ela se difunde suavemente
+ *
+ * ALFA = 0.1 satisfaz o criterio de estabilidade explicito em 3D
+ * (ALFA <= 1/6 ~ 0.167), entao nao ha necessidade de recalcular dt.
+ *
+ * NOVO: alem de imprimir max|u| no terminal, o programa agora GRAVA o
+ * campo 3D em disco a cada INTERVALO_SNAPSHOT passos, em formato binario
+ * compacto (float32, com subamostragem STRIDE_SNAPSHOT para manter os
+ * arquivos pequenos). E esse arquivo que o visualizador em Python
+ * (visualizador_cilindro.py --modo dados_c) le e projeta em 3D -- ou
+ * seja, o Python passa a mostrar os DADOS REAIS gerados por este C, em
+ * vez de reimplementar a simulacao.
+ *
+ * Formato do arquivo binario (little-endian, o padrao em x86/ARM):
+ *   int32 nx_s, int32 ny_s, int32 nz_s   -> dimensoes da malha JA subamostrada
+ *   float32 * (nx_s*ny_s*nz_s)           -> valores de u, na mesma ordem dos
+ *                                           loops (i externo, j meio, k interno)
+ *
+ * Compilar:  gcc -O2 -Wall -fopenmp -o sim sim.c -lm
+ * Rodar:     ./sim
+ * --------------------------------------------------------------------------*/
 
-    for (int i = 0; i < NX; i++) {
-        for (int j = 0; j < NY; j++) {
-            double dx = i - cx;
-            double dy = j - cy;
-            double r2 = dx * dx + dy * dy;
-            double gauss = amplitude * exp(-r2 / (2.0 * largura * largura));
-            c->u[i][j] += gauss;
-            /* v permanece sem perturbação, apenas u recebe o pulso */
+#define N 200
+#define PASSOS 100
+#define ALFA 0.1
+#define LOG_A_CADA 20
+
+/* --- controle dos snapshots gravados em disco para o visualizador Python --- */
+#define SALVAR_SNAPSHOTS   1        /* 1 = grava, 0 = desliga (so imprime no terminal) */
+#define INTERVALO_SNAPSHOT 20       /* a cada quantos passos grava um arquivo */
+#define STRIDE_SNAPSHOT    2        /* subamostragem: pega 1 a cada N pontos por eixo */
+#define PASTA_SAIDA        "saida"
+
+double u[N][N][N];
+double u_next[N][N][N];
+
+/* Fluido parado: u = 0 em todo o dominio */
+void inicializar_parado(void) {
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < N; j++)
+            for (int k = 0; k < N; k++)
+                u[i][j][k] = 0.0;
+}
+
+/* Fluido com velocidade constante u0 */
+void inicializar_constante(double u0) {
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < N; j++)
+            for (int k = 0; k < N; k++)
+                u[i][j][k] = u0;
+}
+
+/* Perturbacao: bloco central 20x20x20 recebe o valor informado
+ * (mesma ideia do inicializar_fluido() do template) */
+void adicionar_perturbacao(double valor) {
+    for (int i = N/2 - 10; i < N/2 + 10; i++)
+        for (int j = N/2 - 10; j < N/2 + 10; j++)
+            for (int k = N/2 - 10; k < N/2 + 10; k++)
+                u[i][j][k] = valor;
+}
+
+/* Copia u_next para u (mesma funcao atualizar_matriz_seq do template) */
+void atualizar_matriz_seq(void) {
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < N; j++)
+            for (int k = 0; k < N; k++)
+                u[i][j][k] = u_next[i][j][k];
+}
+
+double valor_maximo(void) {
+    double max_u = 0.0;
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < N; j++)
+            for (int k = 0; k < N; k++)
+                if (fabs(u[i][j][k]) > max_u) max_u = fabs(u[i][j][k]);
+    return max_u;
+}
+
+/* Um passo de difusao viscosa 3D (mesma formula do template, so que com
+ * o campo ja separado por fase em vez de rodar so uma vez) */
+void passo_difusao_seq(void) {
+    for (int i = 1; i < N - 1; i++) {
+        for (int j = 1; j < N - 1; j++) {
+            for (int k = 1; k < N - 1; k++) {
+                u_next[i][j][k] = u[i][j][k] + ALFA * (
+                    u[i+1][j][k] + u[i-1][j][k] +
+                    u[i][j+1][k] + u[i][j-1][k] +
+                    u[i][j][k+1] + u[i][j][k-1] -
+                    6.0 * u[i][j][k]
+                );
+            }
         }
     }
+    atualizar_matriz_seq();
 }
 
-/*
- * Executa um passo de tempo da difusão viscosa pura, usando diferenças
- * finitas centradas (5 pontos) para o laplaciano e Euler explícito no
- * tempo. Trabalha com buffers separados (entrada/saída) para evitar
- * usar valores já atualizados no mesmo passo (esquema tipo Jacobi).
- *
- *   u_new[i][j] = u[i][j] + nu*dt * [ (u[i+1][j] - 2u[i][j] + u[i-1][j]) / dx^2
- *                                    + (u[i][j+1] - 2u[i][j] + u[i][j-1]) / dy^2 ]
- */
-void passo_difusao(const Campo *atual, Campo *proximo, double dt) {
-    double rx = NU * dt / (DX * DX);
-    double ry = NU * dt / (DY * DY);
-
-    for (int i = 0; i < NX; i++) {
-        int ip = idx_periodico(i + 1, NX);
-        int im = idx_periodico(i - 1, NX);
-        for (int j = 0; j < NY; j++) {
-            int jp = idx_periodico(j + 1, NY);
-            int jm = idx_periodico(j - 1, NY);
-
-            double lap_u = (atual->u[ip][j] - 2.0 * atual->u[i][j] + atual->u[im][j]) * rx
-                         + (atual->u[i][jp] - 2.0 * atual->u[i][j] + atual->u[i][jm]) * ry;
-
-            double lap_v = (atual->v[ip][j] - 2.0 * atual->v[i][j] + atual->v[im][j]) * rx
-                         + (atual->v[i][jp] - 2.0 * atual->v[i][j] + atual->v[i][jm]) * ry;
-
-            proximo->u[i][j] = atual->u[i][j] + lap_u;
-            proximo->v[i][j] = atual->v[i][j] + lap_v;
-        }
-    }
+/* Numero de pontos que sobram em cada eixo depois da subamostragem
+ * (mesma conta que range(0, N, stride) faria em Python) */
+static int tamanho_subamostrado(int n, int stride) {
+    return (n + stride - 1) / stride;
 }
 
-/* Retorna a magnitude máxima da velocidade |V| = sqrt(u^2+v^2) no domínio */
-double velocidade_maxima(const Campo *c) {
-    double max_v = 0.0;
-    for (int i = 0; i < NX; i++)
-        for (int j = 0; j < NY; j++) {
-            double mag = sqrt(c->u[i][j] * c->u[i][j] + c->v[i][j] * c->v[i][j]);
-            if (mag > max_v) max_v = mag;
-        }
-    return max_v;
-}
-
-/* Energia cinética total (proporcional a soma de u^2+v^2) */
-double energia_cinetica(const Campo *c) {
-    double energia = 0.0;
-    for (int i = 0; i < NX; i++)
-        for (int j = 0; j < NY; j++)
-            energia += 0.5 * (c->u[i][j] * c->u[i][j] + c->v[i][j] * c->v[i][j]);
-    return energia;
-}
-
-/* Salva o campo u(x,y) em um arquivo CSV para visualização externa */
-void salvar_snapshot(const Campo *c, const char *nome_arquivo) {
-    FILE *f = fopen(nome_arquivo, "w");
+/* Grava o campo u inteiro (subamostrado) em um arquivo binario, para o
+ * visualizador em Python ler e projetar em 3D. */
+void salvar_snapshot_binario(const char *nome_arquivo) {
+    FILE *f = fopen(nome_arquivo, "wb");
     if (!f) {
-        fprintf(stderr, "Erro ao abrir arquivo %s para escrita\n", nome_arquivo);
+        fprintf(stderr, "Erro ao abrir '%s' para escrita\n", nome_arquivo);
         return;
     }
-    for (int i = 0; i < NX; i++) {
-        for (int j = 0; j < NY; j++) {
-            fprintf(f, "%.6f", c->u[i][j]);
-            if (j < NY - 1) fprintf(f, ",");
+
+    int32_t dims[3];
+    dims[0] = tamanho_subamostrado(N, STRIDE_SNAPSHOT);
+    dims[1] = dims[0];
+    dims[2] = dims[0];
+    fwrite(dims, sizeof(int32_t), 3, f);
+
+    for (int i = 0; i < N; i += STRIDE_SNAPSHOT) {
+        for (int j = 0; j < N; j += STRIDE_SNAPSHOT) {
+            for (int k = 0; k < N; k += STRIDE_SNAPSHOT) {
+                float valor = (float) u[i][j][k];
+                fwrite(&valor, sizeof(float), 1, f);
+            }
         }
-        fprintf(f, "\n");
     }
+
     fclose(f);
 }
 
-/*
- * Executa uma fase de simulação (estável ou com perturbação), fazendo
- * a troca de buffers a cada passo e imprimindo/gravando estatísticas
- * periodicamente.
- */
-void simular_fase(Campo *campo, int n_passos, double dt,
-                   int salvar_snapshots, const char *prefixo) {
-    Campo *buffer_a = campo;
-    Campo *buffer_b = malloc(sizeof(Campo));
-    if (!buffer_b) {
-        fprintf(stderr, "Erro de alocação de memória\n");
-        exit(1);
-    }
-    memcpy(buffer_b, buffer_a, sizeof(Campo));
+/* Roda PASSOS passos de difusao para a fase atual, imprimindo o progresso,
+ * gravando snapshots binarios para o Python, e medindo o tempo com
+ * omp_get_wtime (mesmo cronometro do template, pronto para comparar com a
+ * versao paralela quando ela for escrita). "nome" tambem vira o prefixo dos
+ * arquivos de snapshot (ex.: saida/perturbacao_0020.bin). */
+void rodar_fase(const char *nome) {
+    double inicio = omp_get_wtime();
+    for (int t = 0; t <= PASSOS; t++) {
+        if (t % LOG_A_CADA == 0)
+            printf("passo %3d: max|u| = %.6f\n", t, valor_maximo());
 
-    for (int passo = 0; passo <= n_passos; passo++) {
-        if (passo % INTERVALO_LOG == 0) {
-            double vmax = velocidade_maxima(buffer_a);
-            double energia = energia_cinetica(buffer_a);
-            printf("  passo %5d  |  t = %8.3f  |  max|V| = %10.6f  |  energia = %12.6f\n",
-                   passo, passo * dt, vmax, energia);
+        if (SALVAR_SNAPSHOTS && t % INTERVALO_SNAPSHOT == 0) {
+            char nome_arquivo[256];
+            snprintf(nome_arquivo, sizeof(nome_arquivo), "%s/%s_%04d.bin",
+                     PASTA_SAIDA, nome, t);
+            salvar_snapshot_binario(nome_arquivo);
         }
 
-        if (salvar_snapshots && passo % INTERVALO_SNAPSHOT == 0) {
-            char nome[128];
-            snprintf(nome, sizeof(nome), "saida/%s_%04d.csv", prefixo, passo);
-            salvar_snapshot(buffer_a, nome);
-        }
-
-        if (passo == n_passos) break;
-
-        passo_difusao(buffer_a, buffer_b, dt);
-
-        /* troca de buffers (swap de ponteiros) */
-        Campo *tmp = buffer_a;
-        buffer_a = buffer_b;
-        buffer_b = tmp;
+        if (t < PASSOS) passo_difusao_seq();
     }
-
-    /* garante que o resultado final fique no campo original passado pelo chamador */
-    if (buffer_a != campo) memcpy(campo, buffer_a, sizeof(Campo));
-
-    free(buffer_b == campo ? buffer_a : buffer_b);
+    double fim = omp_get_wtime();
+    printf("[V1] tempo fase %s: %.4f s\n\n", nome, fim - inicio);
 }
 
 int main(void) {
-    /* --- Passo de tempo escolhido a partir do critério de estabilidade ---
-     * Para o esquema explícito de difusão 2D, a estabilidade exige:
-     *     nu * dt * (1/dx^2 + 1/dy^2) <= 0.5
-     * Aplicamos um fator de segurança (FATOR_CFL) sobre esse limite.
-     */
-    double dt_limite = 0.5 / (NU * (1.0 / (DX * DX) + 1.0 / (DY * DY)));
-    double dt = FATOR_CFL * dt_limite;
+    if (SALVAR_SNAPSHOTS) {
+        mkdir(PASTA_SAIDA, 0777); /* ja existir nao e' erro para o programa */
+        printf("Snapshots binarios serao gravados em '%s/' a cada %d passos\n"
+               "(malha subamostrada a cada %d pontos por eixo -> %dx%dx%d por arquivo)\n\n",
+               PASTA_SAIDA, INTERVALO_SNAPSHOT, STRIDE_SNAPSHOT,
+               tamanho_subamostrado(N, STRIDE_SNAPSHOT),
+               tamanho_subamostrado(N, STRIDE_SNAPSHOT),
+               tamanho_subamostrado(N, STRIDE_SNAPSHOT));
+    }
 
-    printf("============================================================\n");
-    printf(" -------------Simulacao de Navier-Stokes-------------------\n");
-    printf("============================================================\n");
-    printf("Malha: %d x %d | dx=dy= %.2f | nu= %.4f\n", NX, NY, DX, NU);
-    printf("dt escolhido = %.6f (limite de estabilidade = %.6f, fator = %.2f)\n\n", dt, dt_limite, FATOR_CFL);
+    printf("Malha %dx%dx%d | ALFA=%.3f | passos por fase=%d\n\n", N, N, N, ALFA, PASSOS);
 
-    Campo campo;
+    /* ---- 1) fluido parado ---- */
+    printf("-- Fluido parado --\n");
+    inicializar_parado();
+    rodar_fase("parado");
 
-    /* ---------------- FASE 1: fluido parado ---------------- */
-    printf("---- FASE 1: fluido inicialmente PARADO (u=v=0) ----\n");
-    inicializar_parado(&campo);
-    simular_fase(&campo, STEPS_ESTAVEL, dt, 0, NULL);
-    printf("-> Esperado: max|V| e energia permanecem em 0 (campo trivialmente estavel).\n\n");
+    /* ---- 2) velocidade constante ---- */
+    printf("-- Velocidade constante (u0 = 1.0) --\n");
+    inicializar_constante(1.0);
+    rodar_fase("constante");
+    printf("(cai perto da borda por causa do contorno fixo u=0 -- esperado)\n\n");
 
-    /* ---------------- FASE 2: velocidade constante ---------------- */
-    printf("---- FASE 2: fluido com velocidade CONSTANTE (u0=1.0, v0=0.5) ----\n");
-    inicializar_constante(&campo, 1.0, 0.5);
-    simular_fase(&campo, STEPS_ESTAVEL, dt, 0, NULL);
-    printf("-> Esperado: max|V| e energia permanecem constantes,\n");
-    printf("   pois o laplaciano de um campo uniforme e nulo.\n\n");
-
-    /* ---------------- FASE 3: perturbação local ---------------- */
-    printf("---- FASE 3: PERTURBACAO gaussiana em fluido parado ----\n");
-    inicializar_parado(&campo);
-    adicionar_perturbacao(&campo, /*amplitude=*/5.0, /*largura=*/3.0);
-    printf("Perturbacao inicial: gaussiana no centro da malha, amplitude=5.0, sigma=3.0\n");
-    printf("Snapshots do campo u(x,y) serao salvos em /mnt/user-data/outputs/\n\n");
-    simular_fase(&campo, STEPS_PERTURBACAO, dt, 1, "snapshot");
-    printf("\n-> Esperado: max|V| decai suavemente com o tempo e a energia se conserva\n");
-    printf("   aproximadamente no inicio, dissipando lentamente (difusao pura nao\n");
-    printf("   conserva energia perfeitamente, pois viscosidade dissipa energia\n");
-    printf("   cinetica em calor). O pico se espalha (alarga) e se achata, sem\n");
-    printf("   oscilacoes bruscas -- comportamento tipico da equacao do calor.\n");
+    /* ---- 3) perturbacao ---- */
+    printf("-- Perturbacao (bloco central 20x20x20 = 100.0) --\n");
+    inicializar_parado();
+    adicionar_perturbacao(100.0);
+    rodar_fase("perturbacao");
+    printf("-> max|u| cai suavemente, sem oscilacoes: a perturbacao esta se difundindo.\n");
 
     return 0;
 }

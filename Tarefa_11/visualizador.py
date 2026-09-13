@@ -2,199 +2,244 @@
 # -*- coding: utf-8 -*-
 """
 ============================================================================
-Visualizador interativo — Difusão viscosa (Navier-Stokes sem advecção)
+Visualizador 3D — fluido difundindo dentro de um cilindro
 ============================================================================
 
-Este script complementa o programa em C `navier_stokes_viscosidade.c`.
-Ele tem DOIS modos de uso:
+Baseado no `sim.c` (grade 3D, laplaciano de 7 pontos, Euler explícito,
+ALFA=0.1). Aqui o domínio retangular do C é recortado no formato de um
+cilindro: qualquer célula fora do raio escolhido (ou nas "tampas" do topo
+e da base) vira parede sólida, mantida fixa em u=0 — exatamente como o C
+nunca atualiza a borda da malha (contorno de Dirichlet fixo), só que agora
+a "borda" tem o formato de um tubo em vez de uma caixa.
 
-  1) MODO INTERATIVO (padrão)
-     Reimplementa a mesma física do C (laplaciano de 5 pontos, malha
-     periódica, Euler explícito) usando NumPy vetorizado, para rodar em
-     tempo real dentro de uma janela matplotlib. Você pode:
-       - Clicar com o botão esquerdo do mouse sobre o campo para "cutucar"
-         o fluido: injeta uma nova perturbação gaussiana exatamente onde
-         você clicou, com a amplitude/largura escolhidas nos sliders.
-       - Ajustar viscosidade (nu), amplitude, largura (sigma) e velocidade
-         de reprodução em tempo real, mesmo com a simulação rodando.
-       - Play / Pause / Reset (parado ou velocidade constante).
-       - Acompanhar max|V| e energia cinética evoluindo em um gráfico ao
-         lado, exatamente como o C imprime no terminal.
+O que você vê na janela:
+  - Esquerda:  o cilindro em 3D (parede em wireframe translúcido) com as
+               células onde |u| ultrapassa um limiar, coloridas pela
+               intensidade — é a "nuvem" da perturbação se espalhando.
+  - Direita (cima):   corte transversal (plano XY) numa altura Z ajustável
+                       — mostra o círculo do cilindro de frente.
+  - Direita (baixo):  corte longitudinal (plano XZ, cortando pelo eixo) —
+                       mostra o tubo "aberto ao meio", de lado.
 
-  2) MODO SNAPSHOTS (--modo snapshots)
-     Lê os arquivos CSV que o programa em C efetivamente gera
-     (saida/snapshot_XXXX.csv) e permite passear por eles com um slider
-     de tempo, sem precisar re-simular nada — é a forma de "ver de verdade"
-     os dados que o C produziu.
+Interatividade:
+  - Clique no corte transversal (XY) para injetar uma nova perturbação
+    gaussiana bem naquele ponto, na altura Z escolhida no slider.
+  - Sliders: ALFA (viscosidade), amplitude, largura (sigma) da perturbação,
+    corte Z, limiar de exibição no 3D, passos de física por quadro.
+  - Botões: Play/Pause, Reset (parado), Reset (velocidade constante),
+    Nova perturbação central.
 
 Uso:
-    python3 visualizador_interativo.py                     # modo interativo
-    python3 visualizador_interativo.py --modo snapshots \
-        --pasta /caminho/para/saida                         # modo snapshots
+    python3 visualizador_cilindro.py
+    python3 visualizador_cilindro.py --nx 60 --ny 60 --nz 140 --raio 26
 
 Dependências: numpy, matplotlib (pip install numpy matplotlib)
 ============================================================================
 """
 
 import argparse
-import glob
-import os
-import sys
-
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider, Button, RadioButtons
+from matplotlib.widgets import Slider, Button
+from matplotlib.animation import FuncAnimation
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (necessário para projection='3d')
 
-# ---------------------------------------------------------------------------
-# Parâmetros padrão (espelham as macros do programa em C)
-# ---------------------------------------------------------------------------
-NX_PADRAO, NY_PADRAO = 100, 100
-DX, DY = 1.0, 1.0
-NU_PADRAO = 0.1
-FATOR_CFL = 0.5
-PASSOS_POR_QUADRO_PADRAO = 4  # quantos passos de física por frame de animação
+ALFA_PADRAO = 0.1               # mesmo valor do sim.c (limite 3D: alfa <= 1/6)
+PASSOS_POR_QUADRO_PADRAO = 2
+MAX_PONTOS_DISPERSOS = 4000      # limite de pontos plotados no 3D por quadro
 
 
-def dt_estavel(nu, dx=DX, dy=DY, fator_cfl=FATOR_CFL):
-    """Mesmo critério de estabilidade usado no C: nu*dt*(1/dx^2+1/dy^2) <= 0.5."""
-    limite = 0.5 / (nu * (1.0 / dx ** 2 + 1.0 / dy ** 2))
-    return fator_cfl * limite
+class FluidoCilindro:
+    """Campo escalar u(x,y,z) difundindo dentro de um cilindro com paredes
+    e tampas sólidas (u fixo em 0 fora do domínio de fluido)."""
 
+    def __init__(self, nx, ny, nz, raio, alfa):
+        self.nx, self.ny, self.nz = nx, ny, nz
+        self.cx, self.cy = (nx - 1) / 2.0, (ny - 1) / 2.0
+        self.raio = raio
+        self.alfa = alfa
 
-class CampoFluido:
-    """Campo de velocidade (u, v) em malha periódica, com difusão viscosa
-    vetorizada via np.roll (equivalente ao laplaciano de 5 pontos do C)."""
+        i = np.arange(nx).reshape(-1, 1, 1)
+        j = np.arange(ny).reshape(1, -1, 1)
+        k = np.arange(nz).reshape(1, 1, -1)
+        dentro_do_raio = (i - self.cx) ** 2 + (j - self.cy) ** 2 <= raio ** 2
+        longe_das_tampas = (k >= 1) & (k <= nz - 2)
+        self.mascara = dentro_do_raio & longe_das_tampas  # True = célula de fluido
 
-    def __init__(self, nx=NX_PADRAO, ny=NY_PADRAO, nu=NU_PADRAO):
-        self.nx, self.ny = nx, ny
-        self.nu = nu
-        self.u = np.zeros((nx, ny))
-        self.v = np.zeros((nx, ny))
-        self.t = 0.0
+        self.u = np.zeros((nx, ny, nz))
+        self.t = 0
         self.historico_t = []
-        self.historico_vmax = []
-        self.historico_energia = []
+        self.historico_max = []
 
+    # -------------------- inicializações (fases 1 e 2 do C) -------------
     def inicializar_parado(self):
         self.u[:] = 0.0
-        self.v[:] = 0.0
         self._reset_historico()
 
-    def inicializar_constante(self, u0=1.0, v0=0.5):
-        self.u[:] = u0
-        self.v[:] = v0
+    def inicializar_constante(self, u0=1.0):
+        self.u[:] = 0.0
+        self.u[self.mascara] = u0
         self._reset_historico()
 
     def _reset_historico(self):
-        self.t = 0.0
+        self.t = 0
         self.historico_t.clear()
-        self.historico_vmax.clear()
-        self.historico_energia.clear()
+        self.historico_max.clear()
 
-    def adicionar_perturbacao(self, cx, cy, amplitude, largura):
-        """Injeta uma gaussiana centrada em (cx, cy) — usado tanto na
-        inicialização quanto nos cliques do mouse ("mexer nas partículas")."""
-        i = np.arange(self.nx).reshape(-1, 1)
-        j = np.arange(self.ny).reshape(1, -1)
-        r2 = (i - cx) ** 2 + (j - cy) ** 2
-        self.u += amplitude * np.exp(-r2 / (2.0 * largura ** 2))
+    # -------------------- perturbação (fase 3 do C / cliques do mouse) --
+    def adicionar_perturbacao(self, cx, cy, cz, valor, largura):
+        i = np.arange(self.nx).reshape(-1, 1, 1)
+        j = np.arange(self.ny).reshape(1, -1, 1)
+        k = np.arange(self.nz).reshape(1, 1, -1)
+        r2 = (i - cx) ** 2 + (j - cy) ** 2 + (k - cz) ** 2
+        gauss = valor * np.exp(-r2 / (2.0 * largura ** 2))
+        self.u += gauss * self.mascara  # nunca "vaza" para fora do cilindro
 
-    def laplaciano(self, campo):
-        """Laplaciano 2D com contorno periódico (idêntico ao idx_periodico do C)."""
-        return (
-            (np.roll(campo, -1, axis=0) - 2 * campo + np.roll(campo, 1, axis=0)) / DX ** 2
-            + (np.roll(campo, -1, axis=1) - 2 * campo + np.roll(campo, 1, axis=1)) / DY ** 2
+    # -------------------- passo de difusão (equivalente ao C) -----------
+    def passo(self):
+        """Laplaciano de 7 pontos com contorno de Dirichlet fixo em 0
+        (mesma ideia do sim.c: bordas nunca são atualizadas)."""
+        up = np.pad(self.u, 1, mode="constant", constant_values=0.0)
+        lap = (
+            up[2:, 1:-1, 1:-1] + up[:-2, 1:-1, 1:-1]
+            + up[1:-1, 2:, 1:-1] + up[1:-1, :-2, 1:-1]
+            + up[1:-1, 1:-1, 2:] + up[1:-1, 1:-1, :-2]
+            - 6.0 * self.u
         )
+        u_novo = self.u + self.alfa * lap
+        u_novo[~self.mascara] = 0.0  # paredes e tampas do cilindro: sempre 0
+        self.u = u_novo
+        self.t += 1
 
-    def passo(self, dt):
-        """Um passo de Euler explícito — mesma fórmula de passo_difusao() no C."""
-        u_novo = self.u + self.nu * dt * self.laplaciano(self.u)
-        v_novo = self.v + self.nu * dt * self.laplaciano(self.v)
-        self.u, self.v = u_novo, v_novo
-        self.t += dt
-
-    def velocidade_maxima(self):
-        return float(np.sqrt(self.u ** 2 + self.v ** 2).max())
-
-    def energia_cinetica(self):
-        return float(0.5 * np.sum(self.u ** 2 + self.v ** 2))
+    def valor_maximo(self):
+        if not self.mascara.any():
+            return 0.0
+        return float(np.abs(self.u[self.mascara]).max())
 
     def registrar_estatisticas(self):
         self.historico_t.append(self.t)
-        self.historico_vmax.append(self.velocidade_maxima())
-        self.historico_energia.append(self.energia_cinetica())
+        self.historico_max.append(self.valor_maximo())
 
 
-# ---------------------------------------------------------------------------
-# MODO 1: interface interativa (sliders + cliques do mouse)
-# ---------------------------------------------------------------------------
-def rodar_modo_interativo():
-    campo = CampoFluido()
+def malha_cilindro(cx, cy, raio, nz, n_aneis=16, n_theta=30):
+    """Gera a superfície (wireframe) do cilindro só para referência visual."""
+    theta = np.linspace(0, 2 * np.pi, n_theta)
+    z = np.linspace(0, nz - 1, n_aneis)
+    theta_grade, z_grade = np.meshgrid(theta, z)
+    x_grade = cx + raio * np.cos(theta_grade)
+    y_grade = cy + raio * np.sin(theta_grade)
+    return x_grade, y_grade, z_grade
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__,
+                                      formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--nx", type=int, default=50, help="pontos da malha em x (padrão 50)")
+    parser.add_argument("--ny", type=int, default=50, help="pontos da malha em y (padrão 50)")
+    parser.add_argument("--nz", type=int, default=100, help="pontos da malha em z / comprimento do cilindro (padrão 100)")
+    parser.add_argument("--raio", type=float, default=None,
+                         help="raio do cilindro em pontos de malha (padrão: quase preenche nx,ny)")
+    parser.add_argument("--alfa", type=float, default=ALFA_PADRAO,
+                         help=f"coeficiente de difusão (padrão {ALFA_PADRAO}; estável até ~0.1667 em 3D)")
+    args = parser.parse_args()
+
+    raio = args.raio if args.raio is not None else min(args.nx, args.ny) / 2.0 - 2.0
+
+    campo = FluidoCilindro(args.nx, args.ny, args.nz, raio, args.alfa)
     campo.inicializar_parado()
-    campo.adicionar_perturbacao(campo.nx // 2, campo.ny // 2, amplitude=5.0, largura=3.0)
+    campo.adicionar_perturbacao(campo.cx, campo.cy, args.nz / 2.0, valor=5.0, largura=4.0)
     campo.registrar_estatisticas()
 
-    estado = {"rodando": False, "passos_por_quadro": PASSOS_POR_QUADRO_PADRAO}
+    estado = {"rodando": False, "passos_por_quadro": PASSOS_POR_QUADRO_PADRAO,
+              "z_corte": args.nz // 2}
 
-    fig = plt.figure(figsize=(11, 6))
-    fig.suptitle("Difusão viscosa interativa — clique no campo para perturbar o fluido",
+    fig = plt.figure(figsize=(13, 6.5))
+    fig.suptitle("Difusão viscosa dentro de um cilindro — clique no corte transversal para perturbar",
                  fontsize=11)
 
-    ax_campo = fig.add_axes([0.06, 0.32, 0.55, 0.58])
-    imagem = ax_campo.imshow(campo.u.T, origin="lower", cmap="RdBu_r",
-                              vmin=-5, vmax=5, animated=True)
-    ax_campo.set_title("Campo u(x, y)")
-    ax_campo.set_xlabel("x")
-    ax_campo.set_ylabel("y")
-    barra_cor = fig.colorbar(imagem, ax=ax_campo, fraction=0.046, pad=0.04)
-    barra_cor.set_label("u")
+    # ---------------- painel 3D (esquerda) ----------------
+    ax3d = fig.add_axes([0.03, 0.28, 0.42, 0.64], projection="3d")
+    xc, yc, zc = malha_cilindro(campo.cx, campo.cy, campo.raio, campo.nz)
+    ax3d.plot_wireframe(xc, yc, zc, color="gray", alpha=0.15, linewidth=0.5)
+    dispersos = ax3d.scatter([], [], [], c=[], cmap="inferno", vmin=0, vmax=5, s=8)
+    ax3d.set_xlim(0, campo.nx)
+    ax3d.set_ylim(0, campo.ny)
+    ax3d.set_zlim(0, campo.nz)
+    ax3d.set_xlabel("x")
+    ax3d.set_ylabel("y")
+    ax3d.set_zlabel("z (comprimento do cilindro)")
 
-    ax_stats = fig.add_axes([0.68, 0.55, 0.28, 0.35])
-    linha_vmax, = ax_stats.plot([], [], color="crimson", label="max|V|")
-    ax_stats.set_xlabel("t")
-    ax_stats.set_ylabel("max|V|", color="crimson")
-    ax_stats.tick_params(axis="y", labelcolor="crimson")
+    # ---------------- corte transversal XY (direita, cima) ----------------
+    ax_xy = fig.add_axes([0.50, 0.55, 0.20, 0.37])
+    fatia_xy = campo.u[:, :, estado["z_corte"]].copy()
+    fatia_xy[~campo.mascara[:, :, estado["z_corte"]]] = np.nan
+    im_xy = ax_xy.imshow(fatia_xy.T, origin="lower", cmap="RdBu_r", vmin=-5, vmax=5)
+    ax_xy.set_title(f"Corte transversal (z={estado['z_corte']})")
+    ax_xy.set_xlabel("x")
+    ax_xy.set_ylabel("y")
 
-    ax_energia = ax_stats.twinx()
-    linha_energia, = ax_energia.plot([], [], color="steelblue", label="energia")
-    ax_energia.set_ylabel("energia cinética", color="steelblue")
-    ax_energia.tick_params(axis="y", labelcolor="steelblue")
-    ax_stats.set_title("Evolução no tempo", fontsize=10)
+    # ---------------- corte longitudinal XZ (direita, baixo) ----------------
+    ax_xz = fig.add_axes([0.74, 0.55, 0.22, 0.37])
+    y_meio = int(round(campo.cy))
+    fatia_xz = campo.u[:, y_meio, :].copy()
+    fatia_xz[~campo.mascara[:, y_meio, :]] = np.nan
+    im_xz = ax_xz.imshow(fatia_xz.T, origin="lower", cmap="RdBu_r", vmin=-5, vmax=5, aspect="auto")
+    ax_xz.set_title(f"Corte longitudinal (y={y_meio})")
+    ax_xz.set_xlabel("x")
+    ax_xz.set_ylabel("z")
 
-    # --- Sliders -----------------------------------------------------------
-    ax_nu = fig.add_axes([0.68, 0.42, 0.28, 0.03])
-    slider_nu = Slider(ax_nu, "viscosidade ν", 0.001, 0.3, valinit=campo.nu)
+    # ---------------- gráfico de max|u| no tempo ----------------
+    ax_stats = fig.add_axes([0.50, 0.30, 0.46, 0.16])
+    linha_max, = ax_stats.plot([], [], color="crimson")
+    ax_stats.set_xlabel("passo")
+    ax_stats.set_ylabel("max|u|")
+    ax_stats.set_title("Evolução de max|u|", fontsize=9)
 
-    ax_amp = fig.add_axes([0.68, 0.36, 0.28, 0.03])
+    # ---------------- sliders ----------------
+    ax_alfa = fig.add_axes([0.06, 0.20, 0.34, 0.03])
+    slider_alfa = Slider(ax_alfa, "ALFA", 0.001, 0.166, valinit=campo.alfa)
+
+    ax_amp = fig.add_axes([0.06, 0.16, 0.34, 0.03])
     slider_amp = Slider(ax_amp, "amplitude", 0.5, 10.0, valinit=5.0)
 
-    ax_largura = fig.add_axes([0.68, 0.30, 0.28, 0.03])
-    slider_largura = Slider(ax_largura, "largura σ", 1.0, 15.0, valinit=3.0)
+    ax_largura = fig.add_axes([0.06, 0.12, 0.34, 0.03])
+    slider_largura = Slider(ax_largura, "largura σ", 1.0, 15.0, valinit=4.0)
 
-    ax_velocidade = fig.add_axes([0.68, 0.24, 0.28, 0.03])
-    slider_velocidade = Slider(ax_velocidade, "passos/quadro", 1, 20,
-                                valinit=PASSOS_POR_QUADRO_PADRAO, valstep=1)
+    ax_zcorte = fig.add_axes([0.06, 0.08, 0.34, 0.03])
+    slider_zcorte = Slider(ax_zcorte, "corte Z", 1, campo.nz - 2,
+                            valinit=estado["z_corte"], valstep=1)
 
-    def ao_mudar_nu(val):
-        campo.nu = val
-    slider_nu.on_changed(ao_mudar_nu)
+    ax_limiar = fig.add_axes([0.50, 0.20, 0.20, 0.03])
+    slider_limiar = Slider(ax_limiar, "limiar 3D", 0.01, 5.0, valinit=0.3)
 
-    def ao_mudar_velocidade(val):
+    ax_passos = fig.add_axes([0.76, 0.20, 0.20, 0.03])
+    slider_passos = Slider(ax_passos, "passos/quadro", 1, 10,
+                            valinit=PASSOS_POR_QUADRO_PADRAO, valstep=1)
+
+    def ao_mudar_alfa(val):
+        campo.alfa = val
+    slider_alfa.on_changed(ao_mudar_alfa)
+
+    def ao_mudar_zcorte(val):
+        estado["z_corte"] = int(val)
+    slider_zcorte.on_changed(ao_mudar_zcorte)
+
+    def ao_mudar_passos(val):
         estado["passos_por_quadro"] = int(val)
-    slider_velocidade.on_changed(ao_mudar_velocidade)
+    slider_passos.on_changed(ao_mudar_passos)
 
-    # --- Botões --------------------------------------------------------
-    ax_play = fig.add_axes([0.06, 0.14, 0.12, 0.06])
+    # ---------------- botões ----------------
+    ax_play = fig.add_axes([0.06, 0.02, 0.14, 0.05])
     botao_play = Button(ax_play, "▶ Play / ❚❚ Pause")
 
-    ax_reset_parado = fig.add_axes([0.20, 0.14, 0.18, 0.06])
-    botao_reset_parado = Button(ax_reset_parado, "Reset: fluido parado")
+    ax_reset_parado = fig.add_axes([0.21, 0.02, 0.16, 0.05])
+    botao_reset_parado = Button(ax_reset_parado, "Reset: parado")
 
-    ax_reset_const = fig.add_axes([0.40, 0.14, 0.20, 0.06])
+    ax_reset_const = fig.add_axes([0.38, 0.02, 0.18, 0.05])
     botao_reset_const = Button(ax_reset_const, "Reset: vel. constante")
 
-    ax_limpar = fig.add_axes([0.62, 0.14, 0.12, 0.06])
-    botao_limpar = Button(ax_limpar, "Limpar histórico")
+    ax_nova_pert = fig.add_axes([0.57, 0.02, 0.20, 0.05])
+    botao_nova_pert = Button(ax_nova_pert, "Nova perturbação central")
 
     def ao_clicar_play(event):
         estado["rodando"] = not estado["rodando"]
@@ -206,107 +251,67 @@ def rodar_modo_interativo():
     botao_reset_parado.on_clicked(ao_clicar_reset_parado)
 
     def ao_clicar_reset_const(event):
-        campo.inicializar_constante(1.0, 0.5)
+        campo.inicializar_constante(1.0)
         campo.registrar_estatisticas()
     botao_reset_const.on_clicked(ao_clicar_reset_const)
 
-    def ao_clicar_limpar(event):
-        campo._reset_historico()
-        campo.registrar_estatisticas()
-    botao_limpar.on_clicked(ao_clicar_limpar)
+    def ao_clicar_nova_pert(event):
+        campo.adicionar_perturbacao(campo.cx, campo.cy, estado["z_corte"],
+                                     slider_amp.val, slider_largura.val)
+    botao_nova_pert.on_clicked(ao_clicar_nova_pert)
 
-    # --- Clique do mouse = "mexer nas partículas" -----------------------
-    def ao_clicar_no_campo(event):
-        if event.inaxes != ax_campo or event.xdata is None:
+    # ---------------- clique no corte XY = "mexer nas partículas" ----------
+    def ao_clicar_no_corte(event):
+        if event.inaxes != ax_xy or event.xdata is None:
             return
-        cx, cy = event.xdata, event.ydata
-        campo.adicionar_perturbacao(cx, cy, slider_amp.val, slider_largura.val)
-    fig.canvas.mpl_connect("button_press_event", ao_clicar_no_campo)
+        x, y = event.xdata, event.ydata
+        if (x - campo.cx) ** 2 + (y - campo.cy) ** 2 > campo.raio ** 2:
+            return  # clique fora do cilindro: ignora
+        campo.adicionar_perturbacao(x, y, estado["z_corte"], slider_amp.val, slider_largura.val)
+    fig.canvas.mpl_connect("button_press_event", ao_clicar_no_corte)
 
-    texto_info = fig.text(0.06, 0.06,
-                           "Dica: clique em qualquer ponto do campo para injetar uma nova "
-                           "perturbação ali, mesmo com a simulação rodando.",
-                           fontsize=9, style="italic")
-
+    # ---------------- loop de animação ----------------
     def atualizar_quadro(_frame):
         if estado["rodando"]:
-            dt = dt_estavel(campo.nu)
             for _ in range(estado["passos_por_quadro"]):
-                campo.passo(dt)
+                campo.passo()
             campo.registrar_estatisticas()
 
-        imagem.set_data(campo.u.T)
-        limite = max(1.0, np.abs(campo.u).max())
-        imagem.set_clim(-limite, limite)
+        # corte transversal XY
+        z = estado["z_corte"]
+        fatia_xy = campo.u[:, :, z].copy()
+        fatia_xy[~campo.mascara[:, :, z]] = np.nan
+        im_xy.set_data(fatia_xy.T)
+        ax_xy.set_title(f"Corte transversal (z={z})")
 
-        linha_vmax.set_data(campo.historico_t, campo.historico_vmax)
-        linha_energia.set_data(campo.historico_t, campo.historico_energia)
-        for eixo, linha in ((ax_stats, linha_vmax), (ax_energia, linha_energia)):
-            eixo.relim()
-            eixo.autoscale_view()
+        # corte longitudinal XZ
+        fatia_xz = campo.u[:, y_meio, :].copy()
+        fatia_xz[~campo.mascara[:, y_meio, :]] = np.nan
+        im_xz.set_data(fatia_xz.T)
 
-        titulo = f"Campo u(x, y)  |  t = {campo.t:6.2f}  |  ν = {campo.nu:.3f}"
-        ax_campo.set_title(titulo)
-        return imagem, linha_vmax, linha_energia
+        # dispersão 3D: só células acima do limiar
+        limiar = slider_limiar.val
+        indices = np.argwhere(campo.mascara & (np.abs(campo.u) > limiar))
+        if len(indices) > MAX_PONTOS_DISPERSOS:
+            passo_amostragem = len(indices) // MAX_PONTOS_DISPERSOS + 1
+            indices = indices[::passo_amostragem]
+        if len(indices) > 0:
+            valores = campo.u[indices[:, 0], indices[:, 1], indices[:, 2]]
+            dispersos._offsets3d = (indices[:, 0], indices[:, 1], indices[:, 2])
+            dispersos.set_array(np.abs(valores))
+        else:
+            dispersos._offsets3d = ([], [], [])
 
-    from matplotlib.animation import FuncAnimation
-    anim = FuncAnimation(fig, atualizar_quadro, interval=50, blit=False)
+        # estatísticas
+        linha_max.set_data(campo.historico_t, campo.historico_max)
+        ax_stats.relim()
+        ax_stats.autoscale_view()
+
+        return im_xy, im_xz, dispersos, linha_max
+
+    anim = FuncAnimation(fig, atualizar_quadro, interval=60, blit=False, cache_frame_data=False)
     plt.show()
-    return anim  # mantém referência viva enquanto a janela está aberta
-
-
-# ---------------------------------------------------------------------------
-# MODO 2: navegar pelos snapshots CSV gerados pelo programa em C
-# ---------------------------------------------------------------------------
-def rodar_modo_snapshots(pasta):
-    arquivos = sorted(glob.glob(os.path.join(pasta, "snapshot_*.csv")))
-    if not arquivos:
-        print(f"Nenhum arquivo 'snapshot_*.csv' encontrado em: {pasta}")
-        print("Rode o programa em C primeiro (ele salva em saida/) ou aponte "
-              "--pasta para o diretório correto.")
-        sys.exit(1)
-
-    quadros = [np.loadtxt(arq, delimiter=",") for arq in arquivos]
-    passos = [int(os.path.basename(a).split("_")[1].split(".")[0]) for a in arquivos]
-
-    fig, ax = plt.subplots(figsize=(7, 6.5))
-    plt.subplots_adjust(bottom=0.2)
-    limite = max(np.abs(q).max() for q in quadros)
-    imagem = ax.imshow(quadros[0].T, origin="lower", cmap="RdBu_r",
-                        vmin=-limite, vmax=limite)
-    ax.set_title(f"Snapshot do C — passo {passos[0]}")
-    fig.colorbar(imagem, ax=ax, label="u")
-
-    ax_slider = fig.add_axes([0.2, 0.06, 0.6, 0.04])
-    slider_quadro = Slider(ax_slider, "quadro", 0, len(quadros) - 1,
-                            valinit=0, valstep=1)
-
-    def ao_mudar_quadro(val):
-        idx = int(val)
-        imagem.set_data(quadros[idx].T)
-        ax.set_title(f"Snapshot do C — passo {passos[idx]}")
-        fig.canvas.draw_idle()
-    slider_quadro.on_changed(ao_mudar_quadro)
-
-    plt.show()
-
-
-# ---------------------------------------------------------------------------
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--modo", choices=["interativo", "snapshots"],
-                         default="interativo",
-                         help="'interativo' roda a simulação em Python ao vivo; "
-                              "'snapshots' navega pelos CSVs gerados pelo C.")
-    parser.add_argument("--pasta", default="saida",
-                         help="Pasta com os snapshot_*.csv do programa em C "
-                              "(usado apenas no modo 'snapshots').")
-    args = parser.parse_args()
-
-    if args.modo == "interativo":
-        rodar_modo_interativo()
-    else:
-        rodar_modo_snapshots(args.pasta)
+    return anim
 
 
 if __name__ == "__main__":
