@@ -120,7 +120,21 @@ double valor_maximo(void) {
  * sem chunk) vem de `schedule(runtime)`, ou seja, da variavel de ambiente
  * OMP_SCHEDULE lida quando o programa comeca a rodar.
  * ------------------------------------------------------------------------*/
-
+void passo_difusao_paralelo(void) {
+    for (int i = 1; i < N - 1; i++) {
+        for (int j = 1; j < N - 1; j++) {
+            for (int k = 1; k < N - 1; k++) {
+                u_next[i][j][k] = u[i][j][k] + ALFA * (
+                    u[i+1][j][k] + u[i-1][j][k] +
+                    u[i][j+1][k] + u[i][j-1][k] +
+                    u[i][j][k+1] + u[i][j][k-1] -
+                    6.0 * u[i][j][k]
+                );
+            }
+        }
+    }
+    atualizar_matriz_paralela();
+}
 
 static int tamanho_subamostrado(int n, int stride) {
     return (n + stride - 1) / stride;
@@ -148,8 +162,9 @@ void salvar_snapshot_binario(const char *nome_arquivo) {
 
 void rodar_fase(const char *nome) {
     double inicio = omp_get_wtime();
+
     for (int t = 0; t <= PASSOS; t++) {
-        if (t % LOG_A_CADA == 0)
+          if (t % LOG_A_CADA == 0)
             printf("passo %3d: max|u| = %.6f\n", t, valor_maximo());
 
         if (SALVAR_SNAPSHOTS && t % INTERVALO_SNAPSHOT == 0) {
@@ -158,7 +173,9 @@ void rodar_fase(const char *nome) {
                      PASTA_SAIDA, nome, t);
             salvar_snapshot_binario(nome_arquivo);
         }
-
+        if (t < PASSOS) {
+            passo_difusao_paralelo();
+        }
     }
     double fim = omp_get_wtime();
     /* Linha de saida pensada para ser facil de "grepar" no benchmark:
