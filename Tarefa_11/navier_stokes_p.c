@@ -1,12 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>     /* int32_t */
+#include <stdint.h>  
 #include <omp.h>
 #include <math.h>
-#include <sys/stat.h>   /* mkdir */
+#include <sys/stat.h>  
 
 /* ---------------------------------------------------------------------------
- * Versao PARALELA (OpenMP) do sim.c original.
  *
  * O que muda em relacao a versao sequencial:
  *   - passo_difusao_seq()   -> passo_difusao_paralelo(): o laco espacial
