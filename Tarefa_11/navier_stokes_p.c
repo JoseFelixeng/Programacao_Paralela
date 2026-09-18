@@ -64,10 +64,9 @@ static void passo_difusao(const double *campo, double *campo_novo, double dt, do
     double dx2 = dx * dx;
     double dy2 = dy * dy;
 
-    #pragma omp parallel 
+    #pragma omp parallel default(none) shared(campo, campo_novo, dt, dx2, dy2)
     {
-        #pragma omp for schedule(dynamic)
-        
+        #pragma omp for schedule(runtime)
                 for (int i = 1; i < NX - 1; i++) {
                     for (int j = 1; j < NY - 1; j++) {
                         double laplaciano_x = (campo[idx(i + 1, j)] - 2.0 * campo[idx(i, j)] + campo[idx(i - 1, j)]) / dx2;
@@ -76,11 +75,7 @@ static void passo_difusao(const double *campo, double *campo_novo, double dt, do
                     
                 }
         }
-
     }
-
-    
-
 
     aplica_contorno(campo_novo);
 }
