@@ -1,238 +1,170 @@
 #!/usr/bin/env python3
-# -----------------------------------------------------------------------
-# visualizar_simulacao_3d.py
-# -----------------------------------------------------------------------
-# Le os arquivos CSV (snapshot_u_passo_XXXXX.csv) gerados pelo programa
-# navier_stokes_viscoso.c e produz uma visualizacao 3D em que:
-#
-#   - x e y sao as coordenadas espaciais da malha (fixas, formam o plano
-#     horizontal do grafico);
-#   - z e a velocidade u(x,y) naquele ponto (a altura da superficie),
-#     que varia com o tempo conforme a perturbacao se difunde.
-#
-# Ou seja, cada snapshot vira uma superficie 3D tipo "montanha": a
-# perturbacao aparece como um pico que, com o efeito da viscosidade,
-# vai ficando mais baixo e mais largo ao longo do tempo.
-#
-# Saidas geradas (pasta visualizacao_saida_3d/):
-#   1) Uma imagem PNG com a superficie 3D de cada snapshot.
-#   2) Um painel comparativo com todas as superficies lado a lado.
-#   3) Um GIF animado mostrando a superficie 3D evoluindo no tempo
-#      (com leve rotacao de camera para ajudar a percepcao de profundidade).
-#
-# Uso:
-#   1. Gere os snapshots com a simulacao em C:
-#        gcc -O2 -o navier_stokes_viscoso navier_stokes_viscoso.c -lm
-#        ./navier_stokes_viscoso
-#   2. Rode este script na mesma pasta onde os .csv foram gerados:
-#        python3 visualizar_simulacao_3d.py
-#
-# Dependencias: numpy, matplotlib (pip install numpy matplotlib pillow)
-# -----------------------------------------------------------------------
+"""
+Animacao 3D do CSV gerado por navier_stokes_3d_seq.c / navier_stokes_3d_omp.c.
 
-import glob
-import os
-import re
-import sys
+Colunas do CSV: passo,t,i,j,k,x,y,z,u   (cada 'passo' e um quadro da animacao)
 
-import numpy as np
+Saidas (use uma ou mais):
+  --saida anim.gif     GIF animado (matplotlib + Pillow)
+  --saida anim.mp4     video (precisa do ffmpeg instalado)
+  --html  anim.html    pagina interativa: gira com o mouse, tem botao play e
+                       barra de tempo (precisa de: pip install plotly)
+
+Modos do GIF/MP4:
+  nuvem       nuvem de pontos 3D (so u >= limiar * u_max do quadro)
+  superficie  superficie z = u(x,y) no plano central
+  ambos       (padrao) os dois lado a lado
+
+Escala de cor/altura:
+  quadro      (padrao) cada quadro dividido pelo seu proprio u_max: mostra a
+              FORMA se espalhando (o u_max real aparece no titulo)
+  global      tudo dividido pelo u_max do passo 0: mostra o DECAIMENTO
+              (a partir de certo ponto o quadro fica quase apagado)
+
+Dica: para ficar suave, gere MUITOS snapshots no CSV, por exemplo:
+  ./ns3d_seq 48 48 48 240 anim.csv 24 60      # 60 quadros, 24 pontos por eixo
+  python3 animar_3d.py anim.csv --saida anim.gif --html anim.html
+"""
+import argparse
+
 import matplotlib
-
-matplotlib.use("Agg")  # backend sem interface grafica
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib import animation
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (necessario para projecao 3D)
+import numpy as np
+import pandas as pd
+from matplotlib import cm, colors
+from matplotlib.animation import FFMpegWriter, FuncAnimation, PillowWriter
 
-PADRAO_ARQUIVO = "saidap/snapshot_u_passo_*.csv"
-PASTA_SAIDA = "visualizacao_saida_3d_P"
-
-
-def encontra_snapshots(pasta="."):
-    """Localiza e ordena (pelo numero do passo) todos os arquivos de snapshot."""
-    arquivos = glob.glob(os.path.join(pasta, PADRAO_ARQUIVO))
-    if not arquivos:
-        sys.exit(
-            "Nenhum arquivo 'snapshot_u_passo_*.csv' encontrado.\n"
-            "Execute antes o programa navier_stokes_viscoso.c para gerar os snapshots."
-        )
-
-    def numero_do_passo(caminho):
-        m = re.search(r"snapshot_u_passo_(\d+)\.csv", os.path.basename(caminho))
-        return int(m.group(1)) if m else -1
-
-    arquivos.sort(key=numero_do_passo)
-    passos = [numero_do_passo(a) for a in arquivos]
-    return arquivos, passos
+CMAP = "inferno"
 
 
-def carrega_campos(arquivos):
-    """Carrega cada CSV como uma matriz numpy 2D (linhas = y, colunas = x)."""
-    return [np.loadtxt(a, delimiter=",") for a in arquivos]
+def carrega(csv):
+    df = pd.read_csv(csv)
+    quadros = []
+    for passo, g in df.groupby("passo"):
+        zs = np.sort(g["z"].unique())
+        plano = g[g["z"] == zs[len(zs) // 2]].pivot(index="y", columns="x", values="u")
+        X, Y = np.meshgrid(plano.columns.values, plano.index.values)
+        quadros.append(dict(passo=int(passo), t=float(g["t"].iloc[0]), g=g,
+                            umax=float(g["u"].max()), X=X, Y=Y, Z=plano.values))
+    return quadros
 
 
-def monta_grade(campo_exemplo):
-    """Cria as coordenadas X, Y correspondentes as colunas/linhas do CSV."""
-    ny, nx = campo_exemplo.shape
-    x = np.linspace(0.0, 1.0, nx)
-    y = np.linspace(0.0, 1.0, ny)
-    X, Y = np.meshgrid(x, y)
-    return X, Y
+def escala_do_quadro(q, quadros, modo_escala):
+    return q["umax"] if modo_escala == "quadro" else quadros[0]["umax"]
 
 
-def desenha_superficie(ax, X, Y, Z, zmin, zmax, titulo, escala_automatica=False):
-    """Desenha uma superficie 3D z = u(x,y) em um eixo 3D ja existente.
+def desenha_nuvem(ax, q, esc, limiar):
+    g = q["g"]
+    sel = g[g["u"] >= limiar * q["umax"]]
+    v = (sel["u"] / esc).clip(0, 1)
+    ax.scatter(sel["x"], sel["y"], sel["z"], c=v, cmap=CMAP, vmin=0, vmax=1,
+               s=6 + 30 * v, alpha=0.6, linewidths=0)
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.set_zlim(0, 1)
+    ax.set_xlabel("x"); ax.set_ylabel("y"); ax.set_zlabel("z")
 
-    Se escala_automatica=True, o eixo z (e a faixa de cores) se ajustam ao
-    minimo/maximo do PROPRIO quadro, em vez de usar uma faixa global fixa.
-    Isso deixa a forma da superficie (o "morro" se achatando e alargando)
-    sempre visivel, mesmo quando a amplitude absoluta ja caiu muito.
-    """
-    if escala_automatica:
-        zmin_local, zmax_local = float(Z.min()), float(Z.max())
-        # evita zlim degenerado (min == max) quando o campo esta praticamente uniforme
-        if zmax_local - zmin_local < 1e-9:
-            zmax_local = zmin_local + 1e-9
+
+def desenha_superficie(ax, q, esc):
+    ax.plot_surface(q["X"], q["Y"], q["Z"] / esc, cmap=CMAP, vmin=0, vmax=1,
+                    linewidth=0, antialiased=True)
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.set_zlim(0, 1)
+    ax.set_xlabel("x"); ax.set_ylabel("y"); ax.set_zlabel("u (normalizado)")
+
+
+def anima_matplotlib(quadros, args):
+    modos = ["nuvem", "superficie"] if args.modo == "ambos" else [args.modo]
+    fig = plt.figure(figsize=(5.2 * len(modos) + 0.8, 5.2))
+    eixos = [fig.add_subplot(1, len(modos), n + 1, projection="3d") for n in range(len(modos))]
+    rotulo = "u / u_max do quadro" if args.escala == "quadro" else "u / u_max do passo 0"
+    fig.colorbar(cm.ScalarMappable(norm=colors.Normalize(0, 1), cmap=CMAP),
+                 ax=eixos, shrink=0.6, pad=0.06, label=rotulo)
+
+    def quadro(n):
+        q = quadros[n]
+        esc = escala_do_quadro(q, quadros, args.escala)
+        for ax, modo in zip(eixos, modos):
+            ax.clear()
+            if modo == "nuvem":
+                desenha_nuvem(ax, q, esc, args.limiar)
+            else:
+                desenha_superficie(ax, q, esc)
+            ax.set_title(modo, fontsize=10)
+            ax.view_init(elev=args.elev, azim=args.azim + args.giro * n)
+        fig.suptitle(f"Difusao viscosa 3D  |  passo {q['passo']}  t = {q['t']:.3g}  "
+                     f"u_max = {q['umax']:.3g}", fontsize=11)
+
+    anim = FuncAnimation(fig, quadro, frames=len(quadros), interval=1000 / args.fps)
+    if args.saida.lower().endswith(".mp4"):
+        writer = FFMpegWriter(fps=args.fps, bitrate=3000)
     else:
-        zmin_local, zmax_local = zmin, zmax
-
-    ax.plot_surface(
-        X, Y, Z,
-        cmap="viridis",
-        vmin=zmin_local,
-        vmax=zmax_local,
-        linewidth=0,
-        antialiased=True,
-        rstride=1,
-        cstride=1,
-    )
-    ax.set_zlim(zmin_local, zmax_local)
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("velocidade u")
-    ax.set_title(titulo)
+        writer = PillowWriter(fps=args.fps)
+    anim.save(args.saida, writer=writer, dpi=args.dpi)
+    print("Animacao:", args.saida, f"({len(quadros)} quadros)")
 
 
-def gera_imagens_individuais(campos, passos, X, Y, zmin, zmax, pasta_saida):
-    """Salva um PNG com a superficie 3D de cada snapshot."""
-    for campo, passo in zip(campos, passos):
-        fig = plt.figure(figsize=(6, 5))
-        ax = fig.add_subplot(111, projection="3d")
-        desenha_superficie(ax, X, Y, campo, zmin, zmax, f"Superficie u(x,y) — passo {passo}")
-        ax.view_init(elev=35, azim=-60)
-        fig.tight_layout()
+def anima_html(quadros, args):
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        raise SystemExit("Para --html instale o plotly:  pip install plotly")
 
-        caminho_saida = os.path.join(pasta_saida, f"superficie_passo_{passo:05d}.png")
-        fig.savefig(caminho_saida, dpi=120)
-        plt.close(fig)
-        print(f"  -> imagem salva: {caminho_saida}")
+    def traco(q):
+        esc = escala_do_quadro(q, quadros, args.escala)
+        g = q["g"]
+        sel = g[g["u"] >= args.limiar * q["umax"]]
+        v = (sel["u"] / esc).clip(0, 1)
+        return go.Scatter3d(x=sel["x"], y=sel["y"], z=sel["z"], mode="markers",
+                            marker=dict(size=3 + 3 * v, color=v, colorscale="Inferno", cmin=0, cmax=1,
+                                        opacity=0.6, colorbar=dict(title="u / u_max")),
+                            hovertemplate="x=%{x:.2f} y=%{y:.2f} z=%{z:.2f}<extra></extra>")
 
-
-def gera_painel_comparativo(campos, passos, X, Y, zmin, zmax, pasta_saida, escala_automatica=False):
-    """Cria uma unica figura com todas as superficies 3D lado a lado."""
-    n = len(campos)
-    n_colunas = min(n, 3)
-    n_linhas = int(np.ceil(n / n_colunas))
-
-    fig = plt.figure(figsize=(5 * n_colunas, 4.3 * n_linhas))
-
-    for k, (campo, passo) in enumerate(zip(campos, passos)):
-        ax = fig.add_subplot(n_linhas, n_colunas, k + 1, projection="3d")
-        desenha_superficie(ax, X, Y, campo, zmin, zmax, f"passo {passo}", escala_automatica)
-        ax.view_init(elev=35, azim=-60)
-
-    sufixo_titulo = "(escala de z automatica por quadro)" if escala_automatica else "(escala de z fixa)"
-    fig.suptitle(f"Evolucao da superficie de velocidade u(x,y,t) — efeito da viscosidade {sufixo_titulo}")
-    fig.tight_layout()
-
-    nome_arquivo = "painel_comparativo_3d_auto.png" if escala_automatica else "painel_comparativo_3d.png"
-    caminho_saida = os.path.join(pasta_saida, nome_arquivo)
-    fig.savefig(caminho_saida, dpi=130)
-    plt.close(fig)
-    print(f"  -> painel comparativo salvo: {caminho_saida}")
-
-
-def gera_animacao_gif(campos, passos, X, Y, zmin, zmax, pasta_saida, escala_automatica=False):
-    """Cria um GIF animado com a superficie 3D evoluindo no tempo, com leve rotacao de camera."""
-    fig = plt.figure(figsize=(6.5, 5.5))
-    ax = fig.add_subplot(111, projection="3d")
-
-    def desenha_quadro(indice):
-        ax.clear()
-        desenha_superficie(
-            ax, X, Y, campos[indice], zmin, zmax,
-            f"Superficie u(x,y) — passo {passos[indice]}",
-            escala_automatica,
-        )
-        # leve rotacao da camera a cada quadro, para reforcar a percepcao 3D
-        angulo = -60 + 40 * (indice / max(1, len(campos) - 1))
-        ax.view_init(elev=35, azim=angulo)
-        return ()
-
-    anim = animation.FuncAnimation(
-        fig, desenha_quadro, frames=len(campos), interval=700, blit=False
-    )
-
-    nome_arquivo = "superficie_animada_3d_auto.gif" if escala_automatica else "superficie_animada_3d.gif"
-    caminho_saida = os.path.join(pasta_saida, nome_arquivo)
-    anim.save(caminho_saida, writer="pillow", fps=1.5)
-    plt.close(fig)
-    print(f"  -> animacao 3D salva: {caminho_saida}")
-
-
-def gera_grafico_decaimento(campos, passos, pasta_saida):
-    """Gera um grafico 2D simples (linha) mostrando como o pico de velocidade
-    (amplitude maxima da perturbacao) cai ao longo do tempo. Complementa as
-    superficies 3D com escala automatica, que mostram a FORMA mas escondem
-    a amplitude absoluta."""
-    picos = [float(c.max()) for c in campos]
-
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.plot(passos, picos, marker="o", color="tab:purple")
-    ax.set_xlabel("passo de tempo")
-    ax.set_ylabel("velocidade maxima (pico)")
-    ax.set_title("Decaimento da amplitude da perturbacao ao longo do tempo")
-    ax.grid(True, alpha=0.3)
-    fig.tight_layout()
-
-    caminho_saida = os.path.join(pasta_saida, "decaimento_amplitude.png")
-    fig.savefig(caminho_saida, dpi=130)
-    plt.close(fig)
-    print(f"  -> grafico de decaimento salvo: {caminho_saida}")
+    frames = [go.Frame(data=[traco(q)], name=str(q["passo"]),
+                       layout=dict(title_text=f"passo {q['passo']}  t = {q['t']:.3g}  u_max = {q['umax']:.3g}"))
+              for q in quadros]
+    fig = go.Figure(data=[traco(quadros[0])], frames=frames)
+    passo_ms = int(1000 / args.fps)
+    fig.update_layout(
+        title_text=f"passo {quadros[0]['passo']}  t = {quadros[0]['t']:.3g}  u_max = {quadros[0]['umax']:.3g}",
+        scene=dict(xaxis=dict(range=[0, 1], title="x"), yaxis=dict(range=[0, 1], title="y"),
+                   zaxis=dict(range=[0, 1], title="z"), aspectmode="cube"),
+        updatemenus=[dict(type="buttons", showactive=False, x=0.05, y=0.05, buttons=[
+            dict(label="Play", method="animate",
+                 args=[None, dict(frame=dict(duration=passo_ms, redraw=True), fromcurrent=True)]),
+            dict(label="Pause", method="animate",
+                 args=[[None], dict(frame=dict(duration=0, redraw=False), mode="immediate")])])],
+        sliders=[dict(steps=[dict(method="animate", label=str(q["passo"]),
+                                  args=[[str(q["passo"])], dict(mode="immediate",
+                                                                frame=dict(duration=0, redraw=True))])
+                             for q in quadros])])
+    fig.write_html(args.html, include_plotlyjs="cdn")
+    print("HTML:", args.html)
 
 
 def main():
-    os.makedirs(PASTA_SAIDA, exist_ok=True)
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("csv")
+    ap.add_argument("--saida", default=None, help="arquivo .gif ou .mp4")
+    ap.add_argument("--html", default=None, help="pagina HTML interativa (plotly)")
+    ap.add_argument("--modo", choices=["nuvem", "superficie", "ambos"], default="ambos")
+    ap.add_argument("--escala", choices=["quadro", "global"], default="quadro")
+    ap.add_argument("--limiar", type=float, default=0.05, help="fracao de u_max abaixo da qual o ponto some (nuvem)")
+    ap.add_argument("--fps", type=int, default=10)
+    ap.add_argument("--dpi", type=int, default=80)
+    ap.add_argument("--elev", type=float, default=22, help="elevacao da camera")
+    ap.add_argument("--azim", type=float, default=35, help="azimute inicial da camera")
+    ap.add_argument("--giro", type=float, default=1.0, help="graus de rotacao da camera por quadro (0 = camera fixa)")
+    args = ap.parse_args()
 
-    print("Procurando snapshots da simulacao...")
-    arquivos, passos = encontra_snapshots(".")
-    print(f"Encontrados {len(arquivos)} snapshots: passos {passos}")
+    if not args.saida and not args.html:
+        args.saida = args.csv.rsplit(".", 1)[0] + "_animp.gif"
 
-    print("Carregando campos...")
-    campos = carrega_campos(arquivos)
-    X, Y = monta_grade(campos[0])
-
-    # z (velocidade) varia; x e y permanecem como a grade espacial fixa.
-    # Escala comum de z para todos os quadros, para que a reducao da
-    # amplitude ao longo do tempo fique visivel na comparacao.
-    zmin = min(c.min() for c in campos)
-    zmax = max(c.max() for c in campos)
-
-    print("\nGerando imagens 3D individuais (uma por snapshot)...")
-    gera_imagens_individuais(campos, passos, X, Y, zmin, zmax, PASTA_SAIDA)
-
-    print("\nGerando painel comparativo 3D (escala de z fixa)...")
-    gera_painel_comparativo(campos, passos, X, Y, zmin, zmax, PASTA_SAIDA, escala_automatica=False)
-
-    print("\nGerando painel comparativo 3D (escala de z automatica por quadro)...")
-    gera_painel_comparativo(campos, passos, X, Y, zmin, zmax, PASTA_SAIDA, escala_automatica=True)
-
-    print("\nGerando animacao 3D (GIF, escala automatica)...")
-    gera_animacao_gif(campos, passos, X, Y, zmin, zmax, PASTA_SAIDA, escala_automatica=True)
-
-    print("\nGerando grafico de decaimento da amplitude...")
-    gera_grafico_decaimento(campos, passos, PASTA_SAIDA)
-
-    print(f"\nConcluido! Todos os arquivos foram salvos em: {PASTA_SAIDA}/")
+    quadros = carrega(args.csv)
+    if len(quadros) < 2:
+        raise SystemExit("O CSV so tem 1 snapshot. Gere mais (ex.: ./ns3d_seq ... arq.csv 24 60).")
+    if args.saida:
+        anima_matplotlib(quadros, args)
+    if args.html:
+        anima_html(quadros, args)
 
 
 if __name__ == "__main__":
