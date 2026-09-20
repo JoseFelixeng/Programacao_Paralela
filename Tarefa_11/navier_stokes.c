@@ -43,7 +43,7 @@
 #define NY_PADRAO 64
 #define NZ_PADRAO 64
 #define N_STEPS_PADRAO 200
-#define CSV_PADRAO "difusao3d.csv"
+#define CSV_PADRAO "difusao3d_sequencial.csv"
 #define MAX_PTS_PADRAO 48
 #define N_SNAPS_PADRAO 5
 
@@ -175,8 +175,7 @@ int main(int argc, char **argv) {
     int ey = (NY + max_pts - 1) / max_pts;
     int ez = (NZ + max_pts - 1) / max_pts;
 
-    fprintf(stderr, "[info] malha = %d x %d x %d (%.2f milhoes de pontos) | passos = %ld | SEQUENCIAL | dt = %.3e\n",
-            NX, NY, NZ, total_pontos / 1e6, N_STEPS, dt);
+    fprintf(stderr, "Malha = %d x %d x %d (%.2f milhoes de pontos) | passos = %ld | SEQUENCIAL | dt = %.3e\n",NX, NY, NZ, total_pontos / 1e6, N_STEPS, dt);
 
     double tempo_calculo = 0.0;   /* so os passos; a gravacao do CSV fica de fora */
     long linhas = 0;
@@ -200,9 +199,9 @@ int main(int argc, char **argv) {
     double soma = 0.0;
     for (long p = 0; p < total_pontos; p++) soma += u[p];
 
-    fprintf(stderr, "[info] checksum (soma de u) = %.10f\n", soma);
-    fprintf(stderr, "[csv] %s: %d snapshots, %ld linhas (amostragem %dx%dx%d)\n", arq_csv, s, linhas, ex, ey, ez);
-    printf("%.6f\n", tempo_calculo);
+    fprintf(stderr, "(soma de u) = %.10f\n", soma);
+    fprintf(stderr, "csv salvo como: %s: %d snapshots, %ld linhas (amostragem %dx%dx%d)\n", arq_csv, s, linhas, ex, ey, ez);
+    printf("Tempo: %.6f s\n", tempo_calculo);
 
     free(u);
     free(u_novo);
