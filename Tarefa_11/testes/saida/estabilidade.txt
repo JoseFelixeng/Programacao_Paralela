@@ -1,0 +1,80 @@
+=== [seq] Fluido parado (u = 0)
+Malha = 64 x 64 x 64 (0.26 milhoes de pontos) | passos = 200 | SEQUENCIAL | dt = 1.680e-03
+Teste: U0 = 0 | AMPLITUDE = 0 | FATOR_DT = 0.4
+soma inicial = 0.0000000000
+u_min = 0.000000e+00 | u_max = 0.000000e+00
+(soma de u) = 0.0000000000
+Estabilidade (campo finito e dentro de [0, 0]): OK
+csv salvo como: /dev/null: 5 snapshots, 163840 linhas (amostragem 2x2x2)
+Tempo: 0.130857 s
+
+=== [seq] Velocidade constante (u = 1, paredes em 0)
+Malha = 64 x 64 x 64 (0.26 milhoes de pontos) | passos = 200 | SEQUENCIAL | dt = 1.680e-03
+Teste: U0 = 1 | AMPLITUDE = 0 | FATOR_DT = 0.4
+soma inicial = 238328.0000000000
+u_min = 0.000000e+00 | u_max = 1.000000e+00
+(soma de u) = 163794.3496410206
+Estabilidade (campo finito e dentro de [0, 1]): OK
+csv salvo como: /dev/null: 5 snapshots, 163840 linhas (amostragem 2x2x2)
+Tempo: 0.127181 s
+
+=== [seq] Perturbacao gaussiana (caso do relatorio)
+Malha = 64 x 64 x 64 (0.26 milhoes de pontos) | passos = 200 | SEQUENCIAL | dt = 1.680e-03
+Teste: U0 = 0 | AMPLITUDE = 2 | FATOR_DT = 0.4
+soma inicial = 212.6597067773
+u_min = 0.000000e+00 | u_max = 8.049583e-02
+(soma de u) = 212.6596807633
+Estabilidade (campo finito e dentro de [0, 1.8]): OK
+csv salvo como: /dev/null: 5 snapshots, 163840 linhas (amostragem 2x2x2)
+Tempo: 0.129566 s
+
+=== [seq] Controle: dt acima do limite (deve FALHAR)
+Malha = 64 x 64 x 64 (0.26 milhoes de pontos) | passos = 200 | SEQUENCIAL | dt = 5.039e-03
+Teste: U0 = 0 | AMPLITUDE = 2 | FATOR_DT = 1.2
+soma inicial = 212.6597067773
+u_min = -1.655753e+10 | u_max = 1.658687e+10
+(soma de u) = 211.9769988446
+Estabilidade (campo finito e dentro de [0, 1.8]): FALHOU
+csv salvo como: /dev/null: 5 snapshots, 163840 linhas (amostragem 2x2x2)
+Tempo: 0.127895 s
+
+=== [par] Fluido parado (u = 0)
+Malha = 64 x 64 x 64 (0.26 milhoes de pontos) | passos = 200 | PARALELO (4 threads) | dt = 1.680e-03
+Teste: U0 = 0 | AMPLITUDE = 0 | FATOR_DT = 0.4
+soma inicial = 0.0000000000
+u_min = 0.000000e+00 | u_max = 0.000000e+00
+(soma de u) = 0.0000000000
+Estabilidade (campo finito e dentro de [0, 0]): OK
+[csv] /dev/null: 5 snapshots, 163840 linhas (amostragem 2x2x2)
+Tempo: 0.056822 s
+
+=== [par] Velocidade constante (u = 1, paredes em 0)
+Malha = 64 x 64 x 64 (0.26 milhoes de pontos) | passos = 200 | PARALELO (4 threads) | dt = 1.680e-03
+Teste: U0 = 1 | AMPLITUDE = 0 | FATOR_DT = 0.4
+soma inicial = 238328.0000000000
+u_min = 0.000000e+00 | u_max = 1.000000e+00
+(soma de u) = 163794.3496410206
+Estabilidade (campo finito e dentro de [0, 1]): OK
+[csv] /dev/null: 5 snapshots, 163840 linhas (amostragem 2x2x2)
+Tempo: 0.048630 s
+
+=== [par] Perturbacao gaussiana (caso do relatorio)
+Malha = 64 x 64 x 64 (0.26 milhoes de pontos) | passos = 200 | PARALELO (4 threads) | dt = 1.680e-03
+Teste: U0 = 0 | AMPLITUDE = 2 | FATOR_DT = 0.4
+soma inicial = 212.6597067773
+u_min = 0.000000e+00 | u_max = 8.049583e-02
+(soma de u) = 212.6596807633
+Estabilidade (campo finito e dentro de [0, 1.8]): OK
+[csv] /dev/null: 5 snapshots, 163840 linhas (amostragem 2x2x2)
+Tempo: 0.053469 s
+
+=== [par] Controle: dt acima do limite (deve FALHAR)
+Malha = 64 x 64 x 64 (0.26 milhoes de pontos) | passos = 200 | PARALELO (4 threads) | dt = 5.039e-03
+Teste: U0 = 0 | AMPLITUDE = 2 | FATOR_DT = 1.2
+soma inicial = 212.6597067773
+u_min = -1.655753e+10 | u_max = 1.658687e+10
+(soma de u) = 211.9769988446
+Estabilidade (campo finito e dentro de [0, 1.8]): FALHOU
+[csv] /dev/null: 5 snapshots, 163840 linhas (amostragem 2x2x2)
+Tempo: 0.052694 s
+

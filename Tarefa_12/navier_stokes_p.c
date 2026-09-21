@@ -1,34 +1,11 @@
-/*
- * navier_stokes_3d.c
- * -----------------------------------------------------------------------
- * Versao SEQUENCIAL (sem OpenMP) da difusao viscosa 3D, com a estrutura do
- * navier_stokes.c (malha por argv, vetor plano, troca de ponteiros,
- * checksum) e exportacao de snapshots em CSV para visualizacao 3D.
- *
- *      du/dt = nu * (d2u/dx2 + d2u/dy2 + d2u/dz2)     (FTCS, 7 pontos)
- *
- * Execucao:
- *   ./ns3d_seq [NX] [NY] [NZ] [N_STEPS] [saida.csv] [MAX_PTS] [N_SNAPS]
- *   Exemplos:
- *     ./ns3d_seq                              -> 64x64x64, 200 passos, difusao3d.csv
- *     ./ns3d_seq 200 200 200 100 saida.csv    -> malha do relatorio
- *
- *   MAX_PTS : maximo de pontos por eixo gravados no CSV (padrao 48)
- *   N_SNAPS : numero de snapshots, incluindo passo 0 e final (padrao 5)
- *
- * CSV: passo,t,i,j,k,x,y,z,u
- * -----------------------------------------------------------------------
- */
-
 #define _POSIX_C_SOURCE 199309L
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
 #include <omp.h>
+#include "pascalops.h"
 
-/* ------------------------- Parametros fisicos e padroes ------------------------- */
 #define LX 1.0
 #define LY 1.0
 #define LZ 1.0
@@ -64,8 +41,6 @@ static double *aloca_campo(int NX, int NY, int NZ) {
     return campo;
 }
 
-/* Contornos em zero (Dirichlet). O passo nunca escreve nas faces, entao
- * basta aplicar uma vez no campo inicial (o outro buffer vem zerado). */
 static void aplica_contorno(double *c, int NX, int NY, int NZ) {
     for (int i = 0; i < NX; i++)
         for (int j = 0; j < NY; j++) {
@@ -84,13 +59,14 @@ static void aplica_contorno(double *c, int NX, int NY, int NZ) {
         }
 }
 
-/* Um passo de difusao explicita (FTCS) -- SEQUENCIAL. */
+
 static void passo_difusao(const double *c, double *cn, double dt, double dx, double dy, double dz, int NX, int NY, int NZ) {
     const double kx = NU * dt / (dx * dx);
     const double ky = NU * dt / (dy * dy);
     const double kz = NU * dt / (dz * dz);
 
     /* Gerando a região Paralela */
+    pascal_start(1);
     #pragma omp parallel 
     {
         #pragma omp for collapse(2)
@@ -108,23 +84,26 @@ static void passo_difusao(const double *c, double *cn, double dt, double dx, dou
         }
 
     }
-    
+    pascal_stop(1);
 
 }
 
 /* Gaussiana 3D no centro do dominio. */
-static void aplica_perturbacao_gaussiana(double *u, double dx, double dy, double dz,
-                                          int NX, int NY, int NZ) {
-    for (int i = 0; i < NX; i++)
-        for (int j = 0; j < NY; j++)
-            for (int k = 0; k < NZ; k++) {
-                double x = i * dx - 0.5 * LX;
-                double y = j * dy - 0.5 * LY;
-                double z = k * dz - 0.5 * LZ;
-                double r2 = x * x + y * y + z * z;
-                u[idx(i, j, k, NY, NZ)] += AMPLITUDE * exp(-r2 / (2.0 * LARGURA * LARGURA));
-            }
-    aplica_contorno(u, NX, NY, NZ);
+static void aplica_perturbacao_gaussiana(double *u, double dx, double dy, double dz, int NX, int NY, int NZ) {
+    pascal_start(2);
+    #pragma omp parallel for collapse(3)
+        for (int i = 0; i < NX; i++)
+            for (int j = 0; j < NY; j++)
+                for (int k = 0; k < NZ; k++) {
+                    double x = i * dx - 0.5 * LX;
+                    double y = j * dy - 0.5 * LY;
+                    double z = k * dz - 0.5 * LZ;
+                    double r2 = x * x + y * y + z * z;
+                    u[idx(i, j, k, NY, NZ)] += AMPLITUDE * exp(-r2 / (2.0 * LARGURA * LARGURA));
+                }
+    pascal_stop(2);
+            aplica_contorno(u, NX, NY, NZ);
+  
 }
 
 /* Grava um snapshot (subamostrado com passo ex,ey,ez) no CSV. */
@@ -180,7 +159,7 @@ int main(int argc, char **argv) {
     int ey = (NY + max_pts - 1) / max_pts;
     int ez = (NZ + max_pts - 1) / max_pts;
 
-    fprintf(stderr, "Malha = %d x %d x %d (%.2f milhoes de pontos) | passos = %ld | SEQUENCIAL | dt = %.3e\n", NX, NY, NZ, total_pontos / 1e6, N_STEPS, dt);
+    fprintf(stderr, "Malha = %d x %d x %d (%.2f milhoes de pontos) | passos = %ld | Paralela | dt = %.3e\n", NX, NY, NZ, total_pontos / 1e6, N_STEPS, dt);
 
     double tempo_calculo = 0.0;   /* so os passos; a gravacao do CSV fica de fora */
     long linhas = 0;

@@ -1,20 +1,28 @@
 /*
- * navier_stokes_3d.c
+ * navier_stokes_seq_teste.c
  * -----------------------------------------------------------------------
- * Versao SEQUENCIAL (sem OpenMP) da difusao viscosa 3D, com a estrutura do
- * navier_stokes.c (malha por argv, vetor plano, troca de ponteiros,
- * checksum) e exportacao de snapshots em CSV para visualizacao 3D.
+ * Versao SEQUENCIAL (sem OpenMP) de COMPROVACAO da difusao viscosa 3D.
+ * Mesmo solver do codigo sequencial do relatorio, com tres parametros de
+ * compilacao para testar a estabilidade do campo:
  *
  *      du/dt = nu * (d2u/dx2 + d2u/dy2 + d2u/dz2)     (FTCS, 7 pontos)
  *
- * Execucao:
- *   ./ns3d_seq [NX] [NY] [NZ] [N_STEPS] [saida.csv] [MAX_PTS] [N_SNAPS]
- *   Exemplos:
- *     ./ns3d_seq                              -> 64x64x64, 200 passos, difusao3d.csv
- *     ./ns3d_seq 200 200 200 100 saida.csv    -> malha do relatorio
+ *   U0        velocidade inicial uniforme (padrao 0.0 = fluido parado)
+ *   AMPLITUDE amplitude da perturbacao gaussiana (padrao 2.0; 0.0 = sem perturbacao)
+ *   FATOR_DT  dt = FATOR_DT * limite de estabilidade (padrao 0.4; > 1.0 e instavel)
  *
- *   MAX_PTS : maximo de pontos por eixo gravados no CSV (padrao 48)
- *   N_SNAPS : numero de snapshots, incluindo passo 0 e final (padrao 5)
+ * Paredes com u = 0 (Dirichlet). Ao final o programa confere o principio do
+ * maximo: o campo deve ficar dentro de [min, max] do campo inicial e finito.
+ *
+ * Compilacao (um caso por compilacao):
+ *   gcc -O2 -o seq_teste navier_stokes_seq_teste.c -lm
+ *   gcc -O2 -DAMPLITUDE=0.0 -DU0=0.0 -o seq_parado    navier_stokes_seq_teste.c -lm
+ *   gcc -O2 -DAMPLITUDE=0.0 -DU0=1.0 -o seq_constante navier_stokes_seq_teste.c -lm
+ *   gcc -O2 -DFATOR_DT=1.2           -o seq_instavel  navier_stokes_seq_teste.c -lm
+ *
+ * Execucao:
+ *   ./seq_teste [NX] [NY] [NZ] [N_STEPS] [saida.csv] [MAX_PTS] [N_SNAPS]
+ *   (use /dev/null como saida.csv para nao gerar arquivo)
  *
  * CSV: passo,t,i,j,k,x,y,z,u
  * -----------------------------------------------------------------------
@@ -26,7 +34,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
-#include <omp.h>
 
 /* ------------------------- Parametros fisicos e padroes ------------------------- */
 #define LX 1.0
@@ -34,14 +41,22 @@
 #define LZ 1.0
 #define NU 0.01
 
+#ifndef AMPLITUDE
 #define AMPLITUDE 2.0
+#endif
+#ifndef U0
+#define U0 0.0
+#endif
+#ifndef FATOR_DT
+#define FATOR_DT 0.4
+#endif
 #define LARGURA   0.03
 
 #define NX_PADRAO 64
 #define NY_PADRAO 64
 #define NZ_PADRAO 64
 #define N_STEPS_PADRAO 200
-#define CSV_PADRAO "difusao3d_p_collapse2.csv"
+#define CSV_PADRAO "difusao3d_teste_seq.csv"
 #define MAX_PTS_PADRAO 48
 #define N_SNAPS_PADRAO 5
 
@@ -85,34 +100,27 @@ static void aplica_contorno(double *c, int NX, int NY, int NZ) {
 }
 
 /* Um passo de difusao explicita (FTCS) -- SEQUENCIAL. */
-static void passo_difusao(const double *c, double *cn, double dt, double dx, double dy, double dz, int NX, int NY, int NZ) {
+static void passo_difusao(const double *c, double *cn, double dt,
+                          double dx, double dy, double dz, int NX, int NY, int NZ) {
     const double kx = NU * dt / (dx * dx);
     const double ky = NU * dt / (dy * dy);
     const double kz = NU * dt / (dz * dz);
 
-    /* Gerando a região Paralela */
-    #pragma omp parallel 
-    {
-        #pragma omp for collapse(2)
-        for (int i = 1; i < NX - 1; i++) {
-            for (int j = 1; j < NY - 1; j++) {
-                for (int k = 1; k < NZ - 1; k++) {
-                    long p = idx(i, j, k, NY, NZ);
-                    double centro = c[p];
-                    cn[p] = centro
-                        + kx * (c[idx(i + 1, j, k, NY, NZ)] - 2.0 * centro + c[idx(i - 1, j, k, NY, NZ)])
-                        + ky * (c[idx(i, j + 1, k, NY, NZ)] - 2.0 * centro + c[idx(i, j - 1, k, NY, NZ)])
-                        + kz * (c[idx(i, j, k + 1, NY, NZ)] - 2.0 * centro + c[idx(i, j, k - 1, NY, NZ)]);
-                }
+    for (int i = 1; i < NX - 1; i++) {
+        for (int j = 1; j < NY - 1; j++) {
+            for (int k = 1; k < NZ - 1; k++) {
+                long p = idx(i, j, k, NY, NZ);
+                double centro = c[p];
+                cn[p] = centro
+                      + kx * (c[idx(i + 1, j, k, NY, NZ)] - 2.0 * centro + c[idx(i - 1, j, k, NY, NZ)])
+                      + ky * (c[idx(i, j + 1, k, NY, NZ)] - 2.0 * centro + c[idx(i, j - 1, k, NY, NZ)])
+                      + kz * (c[idx(i, j, k + 1, NY, NZ)] - 2.0 * centro + c[idx(i, j, k - 1, NY, NZ)]);
             }
         }
-
     }
-    
-
 }
 
-/* Gaussiana 3D no centro do dominio. */
+/* Gaussiana 3D no centro do dominio (somada ao campo ja existente). */
 static void aplica_perturbacao_gaussiana(double *u, double dx, double dy, double dz,
                                           int NX, int NY, int NZ) {
     for (int i = 0; i < NX; i++)
@@ -125,6 +133,17 @@ static void aplica_perturbacao_gaussiana(double *u, double dx, double dy, double
                 u[idx(i, j, k, NY, NZ)] += AMPLITUDE * exp(-r2 / (2.0 * LARGURA * LARGURA));
             }
     aplica_contorno(u, NX, NY, NZ);
+}
+
+/* Minimo, maximo e soma do campo. */
+static void estatisticas(const double *u, long n, double *mn, double *mx, double *soma) {
+    double a = u[0], b = u[0], s = 0.0;
+    for (long p = 0; p < n; p++) {
+        if (u[p] < a) a = u[p];
+        if (u[p] > b) b = u[p];
+        s += u[p];
+    }
+    *mn = a; *mx = b; *soma = s;
 }
 
 /* Grava um snapshot (subamostrado com passo ex,ey,ez) no CSV. */
@@ -161,13 +180,18 @@ int main(int argc, char **argv) {
     double dy = LY / (NY - 1);
     double dz = LZ / (NZ - 1);
     double limite_estabilidade = 0.5 / (NU * (1.0 / (dx * dx) + 1.0 / (dy * dy) + 1.0 / (dz * dz)));
-    double dt = 0.4 * limite_estabilidade;
+    double dt = FATOR_DT * limite_estabilidade;
 
     double *u = aloca_campo(NX, NY, NZ);
     double *u_novo = aloca_campo(NX, NY, NZ);
     long total_pontos = (long) NX * NY * NZ;
 
+    /* campo inicial: velocidade uniforme U0 + perturbacao (paredes em zero) */
+    for (long p = 0; p < total_pontos; p++) u[p] = U0;
     aplica_perturbacao_gaussiana(u, dx, dy, dz, NX, NY, NZ);
+
+    double min0, max0, soma0;
+    estatisticas(u, total_pontos, &min0, &max0, &soma0);
 
     FILE *f = fopen(arq_csv, "w");
     if (f == NULL) {
@@ -180,7 +204,11 @@ int main(int argc, char **argv) {
     int ey = (NY + max_pts - 1) / max_pts;
     int ez = (NZ + max_pts - 1) / max_pts;
 
-    fprintf(stderr, "Malha = %d x %d x %d (%.2f milhoes de pontos) | passos = %ld | SEQUENCIAL | dt = %.3e\n", NX, NY, NZ, total_pontos / 1e6, N_STEPS, dt);
+    fprintf(stderr, "Malha = %d x %d x %d (%.2f milhoes de pontos) | passos = %ld | SEQUENCIAL | dt = %.3e\n",
+            NX, NY, NZ, total_pontos / 1e6, N_STEPS, dt);
+    fprintf(stderr, "Teste: U0 = %g | AMPLITUDE = %g | FATOR_DT = %g\n",
+            (double) U0, (double) AMPLITUDE, (double) FATOR_DT);
+    fprintf(stderr, "soma inicial = %.10f\n", soma0);
 
     double tempo_calculo = 0.0;   /* so os passos; a gravacao do CSV fica de fora */
     long linhas = 0;
@@ -201,14 +229,18 @@ int main(int argc, char **argv) {
     }
     fclose(f);
 
-    double soma = 0.0;
-    for (long p = 0; p < total_pontos; p++) soma += u[p];
+    double minf, maxf, somaf;
+    estatisticas(u, total_pontos, &minf, &maxf, &somaf);
+    const double tol = 1e-12;
+    int ok = isfinite(somaf) && minf >= min0 - tol && maxf <= max0 + tol;
 
-    fprintf(stderr, "(soma de u) = %.10f\n", soma);
-    fprintf(stderr, "[csv] %s: %d snapshots, %ld linhas (amostragem %dx%dx%d)\n", arq_csv, s, linhas, ex, ey, ez);
+    fprintf(stderr, "u_min = %.6e | u_max = %.6e\n", minf, maxf);
+    fprintf(stderr, "(soma de u) = %.10f\n", somaf);
+    fprintf(stderr, "Estabilidade (campo finito e dentro de [%.3g, %.3g]): %s\n", min0, max0, ok ? "OK" : "FALHOU");
+    fprintf(stderr, "csv salvo como: %s: %d snapshots, %ld linhas (amostragem %dx%dx%d)\n", arq_csv, s, linhas, ex, ey, ez);
     printf("Tempo: %.6f s\n", tempo_calculo);
 
     free(u);
     free(u_novo);
-    return 0;
+    return ok ? 0 : 2;
 }

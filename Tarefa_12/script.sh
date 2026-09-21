@@ -1,0 +1,14 @@
+#!/bin/bash
+#SBATCH --job-name=tarefa_12
+#SBATCH --time=0-0:30
+#SBATCH --partition=amd-512
+#SBATCH --nodes=1
+#SBATCH --exclusive
+#SBATCH --cpus-per-task=32
+#SBATCH --output=%x_%j.out
+
+cd ~/Tarefa_12
+source ~/pascal-releases-master/env.sh
+
+gcc  -fopenmp navier_stokes_p.c -lmpascalops -o navier_stokes_p_v3 -lm
+pascalanalyzer ./navier_stokes_p_v3 -t man -g -r 5 --idtm 1 -c 1,2,4,8,16,32 -i 10,20,40,80,160,320 -v INFO -o navier_stokes_v3.json
