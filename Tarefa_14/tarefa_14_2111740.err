@@ -1,0 +1,7 @@
+--------------------------------------------------------------------------
+WARNING: There was an error initializing an OpenFabrics device.
+
+  Local host:   r2n54
+  Local device: mlx5_0
+--------------------------------------------------------------------------
+[r2n53.npad.internal:2147006] [[48345,0],0] ORTE_ERROR_LOG: Out of resource in file util/show_help.c at line 501

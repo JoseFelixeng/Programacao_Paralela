@@ -1,6 +1,12 @@
 #!/bin/bash
-#SBATCH --partition=amd-512 #partição para a qual o job é enviado
+#SBATCH --job-name=tarefa_14
+#SBATCH --time=0-0:10
+#SBATCH --partition=amd-512
+#SBATCH --nodes=2
 #SBATCH --ntasks=2
-#SBATCH --time=0-0:5
+#SBATCH --cpus-per-task=1
+#SBATCH --output=%x_%j.out
+#SBATCH --error=%x_%j.err
 
-mpirun main
+mpicc -o main main.c
+mpirun main 
