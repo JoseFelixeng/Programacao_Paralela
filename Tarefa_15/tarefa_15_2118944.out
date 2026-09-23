@@ -1,0 +1,2 @@
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=2 passos=1000
+  -> tempo=1.677861 s | soma_global=33333400.000000
