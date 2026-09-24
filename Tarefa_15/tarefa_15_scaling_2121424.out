@@ -1,0 +1,135 @@
+--- P=2 MODO=1 REP=1 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=2 passos=1000
+  -> tempo=0.544830 s | soma_global=33333400.000000
+--- P=2 MODO=1 REP=2 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=2 passos=1000
+  -> tempo=0.567140 s | soma_global=33333400.000000
+--- P=2 MODO=1 REP=3 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=2 passos=1000
+  -> tempo=0.562369 s | soma_global=33333400.000000
+--- P=2 MODO=2 REP=1 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=2 passos=1000
+  -> tempo=0.692808 s | soma_global=33333400.000000
+--- P=2 MODO=2 REP=2 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=2 passos=1000
+  -> tempo=0.685420 s | soma_global=33333400.000000
+--- P=2 MODO=2 REP=3 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=2 passos=1000
+  -> tempo=0.736029 s | soma_global=33333400.000000
+--- P=2 MODO=3 REP=1 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=2 passos=1000
+  -> tempo=0.573124 s | soma_global=33333400.000000
+--- P=2 MODO=3 REP=2 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=2 passos=1000
+  -> tempo=0.600866 s | soma_global=33333400.000000
+--- P=2 MODO=3 REP=3 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=2 passos=1000
+  -> tempo=0.561517 s | soma_global=33333400.000000
+--- P=4 MODO=1 REP=1 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=4 passos=1000
+  -> tempo=0.310695 s | soma_global=33333400.000000
+--- P=4 MODO=1 REP=2 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=4 passos=1000
+  -> tempo=0.309094 s | soma_global=33333400.000000
+--- P=4 MODO=1 REP=3 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=4 passos=1000
+  -> tempo=0.359303 s | soma_global=33333400.000000
+--- P=4 MODO=2 REP=1 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=4 passos=1000
+  -> tempo=0.365572 s | soma_global=33333400.000000
+--- P=4 MODO=2 REP=2 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=4 passos=1000
+  -> tempo=0.356090 s | soma_global=33333400.000000
+--- P=4 MODO=2 REP=3 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=4 passos=1000
+  -> tempo=0.356481 s | soma_global=33333400.000000
+--- P=4 MODO=3 REP=1 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=4 passos=1000
+  -> tempo=0.275765 s | soma_global=33333400.000000
+--- P=4 MODO=3 REP=2 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=4 passos=1000
+  -> tempo=0.278092 s | soma_global=33333400.000000
+--- P=4 MODO=3 REP=3 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=4 passos=1000
+  -> tempo=0.260292 s | soma_global=33333400.000000
+--- P=8 MODO=1 REP=1 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=8 passos=1000
+  -> tempo=0.156028 s | soma_global=33333400.000000
+--- P=8 MODO=1 REP=2 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=8 passos=1000
+  -> tempo=0.149582 s | soma_global=33333400.000000
+--- P=8 MODO=1 REP=3 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=8 passos=1000
+  -> tempo=0.134940 s | soma_global=33333400.000000
+--- P=8 MODO=2 REP=1 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=8 passos=1000
+  -> tempo=0.172517 s | soma_global=33333400.000000
+--- P=8 MODO=2 REP=2 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=8 passos=1000
+  -> tempo=0.168125 s | soma_global=33333400.000000
+--- P=8 MODO=2 REP=3 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=8 passos=1000
+  -> tempo=0.170687 s | soma_global=33333400.000000
+--- P=8 MODO=3 REP=1 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=8 passos=1000
+  -> tempo=0.137490 s | soma_global=33333400.000000
+--- P=8 MODO=3 REP=2 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=8 passos=1000
+  -> tempo=0.129583 s | soma_global=33333400.000000
+--- P=8 MODO=3 REP=3 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=8 passos=1000
+  -> tempo=0.137842 s | soma_global=33333400.000000
+--- P=16 MODO=1 REP=1 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=16 passos=1000
+  -> tempo=0.083914 s | soma_global=33333400.000000
+--- P=16 MODO=1 REP=2 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=16 passos=1000
+  -> tempo=0.078827 s | soma_global=33333400.000000
+--- P=16 MODO=1 REP=3 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=16 passos=1000
+  -> tempo=0.085555 s | soma_global=33333400.000000
+--- P=16 MODO=2 REP=1 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=16 passos=1000
+  -> tempo=0.092220 s | soma_global=33333400.000000
+--- P=16 MODO=2 REP=2 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=16 passos=1000
+  -> tempo=0.101066 s | soma_global=33333400.000000
+--- P=16 MODO=2 REP=3 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=16 passos=1000
+  -> tempo=0.094285 s | soma_global=33333400.000000
+--- P=16 MODO=3 REP=1 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=16 passos=1000
+  -> tempo=0.111260 s | soma_global=33333400.000000
+--- P=16 MODO=3 REP=2 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=16 passos=1000
+  -> tempo=0.082841 s | soma_global=33333400.000000
+--- P=16 MODO=3 REP=3 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=16 passos=1000
+  -> tempo=0.069189 s | soma_global=33333400.000000
+--- P=32 MODO=1 REP=1 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=32 passos=1000
+  -> tempo=0.075925 s | soma_global=33333400.000000
+--- P=32 MODO=1 REP=2 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=32 passos=1000
+  -> tempo=0.054101 s | soma_global=33333400.000000
+--- P=32 MODO=1 REP=3 ---
+Modo 1: Send/Recv (bloqueante) | N=1000000 P=32 passos=1000
+  -> tempo=0.071243 s | soma_global=33333400.000000
+--- P=32 MODO=2 REP=1 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=32 passos=1000
+  -> tempo=0.070837 s | soma_global=33333400.000000
+--- P=32 MODO=2 REP=2 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=32 passos=1000
+  -> tempo=0.085743 s | soma_global=33333400.000000
+--- P=32 MODO=2 REP=3 ---
+Modo 2: Isend/Irecv + Wait | N=1000000 P=32 passos=1000
+  -> tempo=0.105726 s | soma_global=33333400.000000
+--- P=32 MODO=3 REP=1 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=32 passos=1000
+  -> tempo=0.067477 s | soma_global=33333400.000000
+--- P=32 MODO=3 REP=2 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=32 passos=1000
+  -> tempo=0.051405 s | soma_global=33333400.000000
+--- P=32 MODO=3 REP=3 ---
+Modo 3: Isend/Irecv + Test (overlap) | N=1000000 P=32 passos=1000
+  -> tempo=0.070558 s | soma_global=33333400.000000
