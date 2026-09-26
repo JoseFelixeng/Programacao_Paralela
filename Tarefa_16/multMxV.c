@@ -84,10 +84,7 @@ int main(int argc, char **argv) {
 
     if (M % nprocs != 0) {
         if (rank == 0) {
-            fprintf(stderr,
-                "Erro: M=%ld precisa ser divisivel pelo numero de "
-                "processos (nprocs=%d) para usar MPI_Scatter/MPI_Gather "
-                "com blocos de tamanho igual.\n", M, nprocs);
+            fprintf(stderr, "Erro: M=%ld precisa ser divisivel pelo numero de " "processos (nprocs=%d) para usar MPI_Scatter/MPI_Gather " "com blocos de tamanho igual.\n", M, nprocs);
         }
         MPI_Finalize();
         return 1;
@@ -152,9 +149,7 @@ int main(int argc, char **argv) {
                 double dif = fabs(y[i] - y_serial[i]);
                 if (dif > erro_max) erro_max = dif;
             }
-            fprintf(stderr,
-                "[verify] erro absoluto maximo entre paralelo e serial: %e\n",
-                erro_max);
+            fprintf(stderr, "[verify] erro absoluto maximo entre paralelo e serial: %e\n", erro_max);
             free(y_serial);
         }
     }
