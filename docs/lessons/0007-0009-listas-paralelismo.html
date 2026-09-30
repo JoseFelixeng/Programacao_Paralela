@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Tarefas 7, 8 e 9: Listas Encadeadas e Paralelismo</title>
+    <style>body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: auto; padding: 20px; }</style>
+</head>
+<body>
+    <h1>Tarefas 7, 8 e 9: Listas Encadeadas e Paralelismo</h1>
+    <h2 id="teoria">Teoria</h2>
+    <ul>
+        <li><strong>Tarefa 7 e 9 (Listas):</strong> Percorrer listas encadeadas em paralelo é um desafio pois não há acesso direto por índice. O trabalho costuma ser serial no percurso, então focamos na paralelização do processamento de cada nó.</li>
+        <li><strong>Tarefa 8 (Pi/Reduções):</strong> Comparação de métodos para cálculo de PI (Riemann/Monte Carlo). A estratégia de redução e a granularidade (fazer pequenos cálculos por thread) são chaves para evitar overhead.</li>
+    </ul>
+    <h2 id="pratica">Prática</h2>
+    <p>Listas encadeadas em paralelo são limitadas pelo "Ponteiro-Chasing" (o próximo nó depende do atual). A lição aqui foi entender que nem toda estrutura de dados é amigável ao paralelismo SIMD/OpenMP sem um pré-processamento (ex: converter para vetor).</p>
+    <h2 id="referencia-rapida">Referência Rápida</h2>
+    <ul>
+        <li><code>Pointer Chasing</code>: Limite fundamental em listas que impede paralelismo de percurso.</li>
+        <li><code>Data Decomposition</code>: Transformar listas em arrays para permitir acesso randômico/paralelo.</li>
+    </ul>
+    <h2>Quizzes</h2>
+    <div id="quiz-area"></div>
+    <script>
+        const quizzes = [
+            { q: "Qual o maior problema de paralelizar listas encadeadas?", a: ["O número de nós", "O acesso sequencial por ponteiros (pointer chasing)", "O tamanho dos dados"], correct: 1 },
+            { q: "Qual a vantagem de converter lista para vetor antes de processar?", a: ["Reduz uso de memória", "Permite acesso paralelo e localidade", "Aumenta o overhead"], correct: 1 },
+            { q: "No cálculo de PI, qual o efeito de aumentar a granularidade?", a: ["Aumenta overhead de thread", "Diminui contenção e overhead", "Garante precisão extra"], correct: 1 }
+        ];
+    </script>
+</body>
+</html>

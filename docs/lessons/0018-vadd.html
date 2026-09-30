@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Tarefa 18: VADD (Vetor Addition)</title>
+    <style>body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: auto; padding: 20px; }</style>
+</head>
+<body>
+    <h1>Tarefa 18: VADD (Vetor Addition)</h1>
+    <h2 id="teoria">Teoria</h2>
+    <ul>
+        <li><strong>VADD:</strong> Soma de dois vetores (C = A + B). É o problema clássico de memória intensiva.</li>
+        <li><strong>GPU/Heterogêneo:</strong> Introdução ao conceito de computação paralela massiva vs. CPU.</li>
+    </ul>
+    <h2 id="referencia-rapida">Referência Rápida</h2>
+    <ul>
+        <li><code>Vetorização</code>: Capacidade da CPU/GPU de processar múltiplos elementos simultaneamente (SIMD).</li>
+        <li><code>Throughput</code>: Vazão de dados, vital para problemas de largura de banda.</li>
+    </ul>
+    <h2>Quizzes</h2>
+    <div id="quiz-area"></div>
+    <script>
+        const quizzes = [
+            { q: "O problema VADD é tipicamente:", a: ["Compute-bound", "Memory-bound", "I/O-bound"], correct: 1 },
+            { q: "O que é SIMD?", a: ["Single Instruction, Multiple Data", "Single Internal Memory Data", "System Integrated Memory Device"], correct: 0 },
+            { q: "Por que GPU brilha em VADD?", a: ["Possui latência menor", "Altíssima largura de banda e paralelismo", "É mais barata"], correct: 1 }
+        ];
+    </script>
+</body>
+</html>

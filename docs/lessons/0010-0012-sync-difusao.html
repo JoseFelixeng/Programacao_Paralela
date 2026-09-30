@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Tarefas 10, 11 e 12: Sincronização e Difusão 3D</title>
+    <style>body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: auto; padding: 20px; }</style>
+</head>
+<body>
+    <h1>Tarefas 10, 11 e 12: Sincronização e Difusão 3D</h1>
+    <h2 id="teoria">Teoria</h2>
+    <ul>
+        <li><strong>Tarefa 10 (Sincronização):</strong> Diferenças entre <code>atomic</code> (rápido, hardware), <code>critical</code> (lento, bloqueio de software) e <code>reduction</code>.</li>
+        <li><strong>Tarefa 11 e 12 (Difusão 3D):</strong> Aplicação de stencil. Foco no uso de <code>collapse</code> para lidar com loops aninhados e balanceamento em grades volumétricas.</li>
+    </ul>
+    <h2 id="pratica">Prática</h2>
+    <p>A sincronização exige cuidado extremo: <code>atomic</code> é ideal para contadores simples, enquanto <code>critical</code> deve ser evitado em seções de alto tráfego. Na difusão 3D, aprendemos que o escalonamento e o layout de memória (stride) são tão importantes quanto o número de threads.</p>
+    <h2 id="referencia-rapida">Referência Rápida</h2>
+    <ul>
+        <li><code>#pragma omp atomic</code>: Proteção de baixo custo para operações simples.</li>
+        <li><code>#pragma omp critical</code>: Proteção completa, mas introduz serialização.</li>
+        <li><code>Collapse</code>: Ferramenta essencial para estender o espaço de iteração em loops 3D.</li>
+    </ul>
+    <h2>Quizzes</h2>
+    <div id="quiz-area"></div>
+    <script>
+        const quizzes = [
+            { q: "Qual a diferença entre atomic e critical?", a: ["Atomic é de baixo nível (hardware), critical é software", "Atomic é mais lento", "São idênticos"], correct: 0 },
+            { q: "Em stencil 3D, por que o stride de acesso importa?", a: ["Afeta a localidade e cache misses", "Altera o resultado final", "Apenas por estética"], correct: 0 },
+            { q: "Por que evitar o critical em loops de difusão?", a: ["Porque gera gargalo de serialização", "Porque não funciona", "Porque usa muita RAM"], correct: 0 }
+        ];
+    </script>
+</body>
+</html>

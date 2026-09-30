@@ -18,5 +18,43 @@ CMakeUserPresets.json
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #cmake-build-*
 .pi/
-.pi/
-.pi/
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Binários e executáveis
+*.o
+*.out
+*.exe
+*.bin
+
+# Saídas de execução
+saida/
+output/
+outputs/
+resultados/
+results/
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.log
+*.swp
+*~
+
+# IDEs/editores
+.vscode/
+.idea/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Arquivos locais do agente
+.local/
+

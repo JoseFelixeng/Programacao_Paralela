@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Tarefas 4, 5 e 6: Cache, Localidade e Introdução ao OpenMP</title>
+    <style>body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: auto; padding: 20px; }</style>
+</head>
+<body>
+    <h1>Tarefas 4, 5 e 6: Cache, Localidade e OpenMP</h1>
+    <h2 id="teoria">Teoria</h2>
+    <ul>
+        <li><strong>Tarefa 4 (Cache):</strong> O foco é a hierarquia de memória. A CPU busca dados em blocos (linhas de cache). O acesso por colunas em matrizes row-major (como em C) causa estouro de cache e degrada drasticamente a performance.</li>
+        <li><strong>Tarefa 5 e 6 (OpenMP):</strong> Introdução à paralelização com diretivas <code>#pragma omp parallel for</code> e o uso de <code>reduction</code> para evitar race conditions em somas acumuladas.</li>
+    </ul>
+    <h2 id="pratica">Prática</h2>
+    <p>Na Tarefa 4, comparamos acesso sequencial vs. aleatório/strided. Nas tarefas 5 e 6, aprendemos que paralelizar não é apenas colocar um pragma, mas garantir que variáveis como acumuladores sejam tratadas como <code>reduction</code> para evitar condições de corrida (data races).</p>
+    <h2 id="referencia-rapida">Referência Rápida</h2>
+    <ul>
+        <li><code>Row-major</code>: O layout de memória do C. Percorra o último índice primeiro!</li>
+        <li><code>False Sharing</code>: Quando threads diferentes escrevem em dados que compartilham a mesma linha de cache.</li>
+        <li><code>reduction(+:var)</code>: Resolve race condition em somas paralelas.</li>
+    </ul>
+    <h2>Quizzes</h2>
+    <div id="quiz-area"></div>
+    <script>
+        const quizzes = [
+            { q: "Por que percorrer matrizes por colunas em C é ineficiente?", a: ["Porque a CPU é 32-bit", "Porque quebra a localidade espacial (cache misses)", "Porque o compilador proíbe"], correct: 1 },
+            { q: "Qual a função do 'reduction' no OpenMP?", a: ["Sincronizar threads manualmente", "Evitar race conditions em variáveis compartilhadas", "Forçar execução sequencial"], correct: 1 },
+            { q: "O que causa 'false sharing'?", a: ["Múltiplas threads alterando dados na mesma linha de cache", "Uso excessivo de RAM", "Divisão por zero"], correct: 0 }
+        ];
+        // ... (quiz logic)
+    </script>
+</body>
+</html>

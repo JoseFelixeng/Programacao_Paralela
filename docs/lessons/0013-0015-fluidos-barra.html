@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Tarefas 13, 14 e 15: Fluidos e Barra 1D</title>
+    <style>body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: auto; padding: 20px; }</style>
+</head>
+<body>
+    <h1>Tarefas 13, 14 e 15: Fluidos e Barra 1D</h1>
+    <h2 id="teoria">Teoria</h2>
+    <ul>
+        <li><strong>Navier-Stokes (13-14):</strong> Equações governantes de fluidos. O desafio aqui é a estabilidade numérica (condição de Courant-Friedrichs-Lewy) e a eficiência em múltiplos passos.</li>
+        <li><strong>Barra 1D (15):</strong> Simulação de transferência de calor. É o problema "Olá Mundo" de métodos numéricos, ideal para treinar contornos de Dirichlet/Neumann.</li>
+    </ul>
+    <h2 id="referencia-rapida">Referência Rápida</h2>
+    <ul>
+        <li><code>CFL Condition</code>: Regra fundamental para estabilidade numérica.</li>
+        <li><code>Dirichlet</code>: Valor fixo no contorno.</li>
+        <li><code>Neumann</code>: Derivada (fluxo) fixa no contorno.</li>
+    </ul>
+    <h2>Quizzes</h2>
+    <div id="quiz-area"></div>
+    <script>
+        const quizzes = [
+            { q: "O que limita o passo de tempo em simulações de fluidos?", a: ["A memória RAM", "A condição de estabilidade CFL", "O número de threads"], correct: 1 },
+            { q: "O que é contorno de Dirichlet?", a: ["Fluxo fixo", "Valor fixo nas bordas", "Sem restrição"], correct: 1 },
+            { q: "Em Barra 1D, o que ocorre se o passo de tempo for grande demais?", a: ["A simulação explode (instabilidade)", "O cálculo fica mais rápido", "Aumenta a precisão"], correct: 0 }
+        ];
+    </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Tarefa 11: Difusão e Agendamento OpenMP</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: auto; padding: 20px; }
+        h1, h2 { color: #2c3e50; }
+        .quiz { background: #f4f4f4; padding: 15px; border-radius: 5px; margin-top: 20px; }
+        .correct { color: green; font-weight: bold; }
+        .wrong { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Tarefa 11: Difusão e Agendamento OpenMP</h1>
+
+    <h2 id="teoria">Teoria</h2>
+    <p>Nesta tarefa, exploramos a difusão 3D (FTCS). O desafio principal é paralelizar loops aninhados (i, j, k) eficientemente.</p>
+    <ul>
+        <li><strong>Collapse:</strong> Une múltiplos loops em um único espaço de iteração, melhorando o balanceamento de carga e reduzindo o overhead do escalonador.</li>
+        <li><strong>Scheduling:</strong> <code>static</code> é previsível (bom para cargas constantes), <code>dynamic</code> adapta-se a variações (bom para desbalanceamento), <code>guided</code> é um meio-termo.</li>
+        <li><strong>Memory Bound:</strong> Estênceis 3D acessam muita memória. Em alta concorrência, o barramento de memória torna-se o gargalo, não a CPU.</li>
+    </ul>
+
+    <h2 id="pratica">Prática</h2>
+    <p>Analisamos que o uso de <code>collapse(2)</code> em grades 512³ saturou o paralelismo de forma eficiente. O gargalo observado em 8 threads (queda de eficiência) confirmou que o problema é limitado pela largura de banda da memória, onde adicionar mais threads apenas aumenta a contenção no barramento de dados.</p>
+
+    <h2 id="referencia-rapida">Referência Rápida</h2>
+    <ul>
+        <li><code>#pragma omp for collapse(n)</code>: Lineariza 'n' loops aninhados.</li>
+        <li><code>schedule(static, chunk)</code>: Divisão fixa de trabalho.</li>
+        <li><code>schedule(dynamic, chunk)</code>: Threads pegam novos blocos conforme terminam.</li>
+        <li><code>clock_gettime(CLOCK_MONOTONIC)</code>: Medição precisa de tempo.</li>
+    </ul>
+
+    <h2>Quizzes</h2>
+    <div id="quiz-area"></div>
+
+    <script>
+        const quizzes = [
+            { q: "Qual o objetivo do collapse(n)?", a: ["Aumentar o espaço de iteração para melhor escalonamento", "Diminuir a memória usada", "Forçar execução sequencial"], correct: 0 },
+            { q: "O que caracteriza um problema Memory Bound?", a: ["O cálculo aritmético é muito lento", "O barramento de memória é o gargalo", "A CPU é muito rápida"], correct: 1 },
+            { q: "Qual schedule lida melhor com cargas de trabalho desbalanceadas?", a: ["Static", "Dynamic", "Default"], correct: 1 },
+            { q: "Por que a eficiência cai com muitas threads em estêncil 3D?", a: ["Contenção no barramento de memória", "Overhead do OpenMP", "Falta de memória RAM"], correct: 0 },
+            { q: "O que o collapse(2) faz na prática?", a: ["Cria loops paralelos independentes", "Lineariza dois loops em um espaço único", "Dobras as variáveis"], correct: 1 }
+        ];
+
+        const area = document.getElementById('quiz-area');
+        quizzes.forEach((item, idx) => {
+            area.innerHTML += `<div class='quiz'>
+                <p>${item.q}</p>
+                ${item.a.map((opt, i) => `<button onclick="check(${idx}, ${i})">${opt}</button>`).join('')}
+                <div id="res-${idx}"></div>
+            </div>`;
+        });
+
+        function check(qIdx, aIdx) {
+            const res = document.getElementById('res-' + qIdx);
+            if (aIdx === quizzes[qIdx].correct) res.innerHTML = '<span class="correct">Correto!</span>';
+            else res.innerHTML = '<span class="wrong">Incorreto.</span>';
+        }
+    </script>
+</body>
+</html>

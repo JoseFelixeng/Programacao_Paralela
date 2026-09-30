@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Tarefas 16 e 17: Multiplicação de Matrizes</title>
+    <style>body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: auto; padding: 20px; }</style>
+</head>
+<body>
+    <h1>Tarefas 16 e 17: Multiplicação de Matrizes</h1>
+    <h2 id="teoria">Teoria</h2>
+    <ul>
+        <li><strong>Multiplicação (MatMul):</strong> A operação básica de computação científica. Otimizar MatMul é sobre <em>tiling/blocking</em> para maximizar a reutilização de dados na cache.</li>
+        <li><strong>Complexidade:</strong> O algoritmo ingênuo é O(n³). Com tiling, reduzimos drasticamente os *cache misses*.</li>
+    </ul>
+    <h2 id="referencia-rapida">Referência Rápida</h2>
+    <ul>
+        <li><code>Tiling</code>: Quebrar matrizes em blocos que cabem na L1/L2.</li>
+        <li><code>Loop Reordering</code>: Mudar a ordem (i, k, j) para acessar a memória contiguamente.</li>
+    </ul>
+    <h2>Quizzes</h2>
+    <div id="quiz-area"></div>
+    <script>
+        const quizzes = [
+            { q: "Qual a vantagem do Tiling na MatMul?", a: ["Reduzir o número de multiplicações", "Maximizar a reutilização de dados na cache", "Paralelizar o código"], correct: 1 },
+            { q: "Por que mudar a ordem dos loops (ijk para ikj) melhora a performance?", a: ["Acesso sequencial melhora localidade espacial", "O compilador prefere a letra k", "Evita race condition"], correct: 0 },
+            { q: "A complexidade da MatMul ingênua é:", a: ["O(n²)", "O(n³)", "O(log n)"], correct: 1 }
+        ];
+    </script>
+</body>
+</html>
