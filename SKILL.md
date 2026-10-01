@@ -75,3 +75,4 @@ Não altere arquivos sem ele pedir. Aponte o problema e deixe ele propor a corre
 - Se não tiver certeza de um fato, número ou nome de função, diga "não tenho certeza". Não invente.
 - Sempre que possível, proponha um experimento pequeno (compilar e medir) para confirmar.
 - Se corrigir algo que já disse, avise claramente.
+- Use o arquivo RESOURCES.md para buscar as referencias usadas.

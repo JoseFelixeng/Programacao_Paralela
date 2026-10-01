@@ -1,993 +1,552 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DCA3703 — Programação Paralela: tarefas, aulas, relatórios, códigos e resultados.">
+  <title>DCA3703: Programação Paralela</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --surface: #ffffff;
+      --surface-2: #eef1f7;
+      --text: #18202b;
+      --muted: #5e6878;
+      --border: #dce1ea;
+      --accent: #315efb;
+      --accent-2: #2148c7;
+      --success: #18794e;
+      --warning: #a15c00;
+      --shadow: 0 10px 28px rgba(20, 30, 50, .08);
+    }
 
-    <title>DCA3703: Programação Paralela</title>
+    [data-theme="dark"] {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-2: #21262d;
+      --text: #e6edf3;
+      --muted: #9da7b3;
+      --border: #30363d;
+      --accent: #6f8cff;
+      --accent-2: #8da4ff;
+      --success: #3fb950;
+      --warning: #d29922;
+      --shadow: 0 12px 32px rgba(0, 0, 0, .28);
+    }
 
-    <style>
-        :root {
-            --bg: #f5f7fa;
-            --surface: #ffffff;
-            --surface-hover: #f8fafc;
-            --text: #172033;
-            --muted: #64748b;
-            --border: #e2e8f0;
-            --accent: #2563eb;
-            --accent-hover: #1d4ed8;
-            --success: #15803d;
-            --success-bg: #dcfce7;
-            --warning: #b45309;
-            --warning-bg: #fef3c7;
-            --code-bg: #f1f5f9;
-            --shadow: 0 8px 25px rgba(15, 23, 42, 0.07);
-        }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
 
-        [data-theme="dark"] {
-            --bg: #0f172a;
-            --surface: #111c31;
-            --surface-hover: #162238;
-            --text: #e5e7eb;
-            --muted: #94a3b8;
-            --border: #263449;
-            --accent: #60a5fa;
-            --accent-hover: #93c5fd;
-            --success: #4ade80;
-            --success-bg: rgba(34, 197, 94, 0.12);
-            --warning: #fbbf24;
-            --warning-bg: rgba(245, 158, 11, 0.12);
-            --code-bg: #1e293b;
-            --shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                   "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
 
-        * {
-            box-sizing: border-box;
-        }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
 
-        html {
-            scroll-behavior: smooth;
-        }
+    .container {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
 
-        body {
-            margin: 0;
-            font-family:
-                Inter,
-                ui-sans-serif,
-                system-ui,
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.65;
-            transition:
-                background-color 0.2s ease,
-                color 0.2s ease;
-        }
+    header {
+      padding: 64px 0 48px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
 
-        a {
-            color: var(--accent);
-            text-decoration: none;
-        }
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: flex-start;
+    }
 
-        a:hover {
-            color: var(--accent-hover);
-            text-decoration: underline;
-        }
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: .78rem;
+    }
 
-        .container {
-            width: min(1120px, calc(100% - 32px));
-            margin: 0 auto;
-        }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.08;
+      letter-spacing: -.035em;
+    }
 
-        /* =========================
-           HEADER
-           ========================= */
+    .subtitle {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 1.08rem;
+      max-width: 720px;
+    }
 
-        header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid var(--border);
-            background: color-mix(
-                in srgb,
-                var(--surface) 92%,
-                transparent
-            );
-            backdrop-filter: blur(12px);
-        }
+    button {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font: inherit;
+      white-space: nowrap;
+    }
 
-        .header-inner {
-            min-height: 72px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-        }
+    button:hover { border-color: var(--accent); }
 
-        .brand {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
+    main { padding: 42px 0 64px; }
 
-        .brand-title {
-            font-size: 1rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-        }
+    section { margin-bottom: 48px; }
 
-        .brand-subtitle {
-            color: var(--muted);
-            font-size: 0.82rem;
-        }
+    h2 {
+      margin: 0 0 16px;
+      font-size: 1.65rem;
+      letter-spacing: -.02em;
+    }
 
-        .theme-button {
-            border: 1px solid var(--border);
-            background: var(--surface);
-            color: var(--text);
-            border-radius: 10px;
-            padding: 8px 13px;
-            cursor: pointer;
-            font: inherit;
-            font-size: 0.88rem;
-            transition: 0.2s ease;
-        }
+    h3 { margin-top: 0; }
 
-        .theme-button:hover {
-            background: var(--surface-hover);
-            border-color: var(--accent);
-        }
+    .intro {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
 
-        /* =========================
-           HERO
-           ========================= */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-top: 22px;
+    }
 
-        .hero {
-            padding: 70px 0 45px;
-        }
+    .stat {
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+    }
 
-        .hero h1 {
-            margin: 0 0 12px;
-            font-size: clamp(2.2rem, 5vw, 3.8rem);
-            line-height: 1.08;
-            letter-spacing: -0.045em;
-        }
+    .stat strong {
+      display: block;
+      font-size: 1.7rem;
+      line-height: 1;
+      margin-bottom: 7px;
+    }
 
-        .hero-subtitle {
-            margin: 0 0 25px;
-            font-size: clamp(1rem, 2vw, 1.2rem);
-            color: var(--muted);
-        }
+    .stat span {
+      color: var(--muted);
+      font-size: .9rem;
+    }
 
-        .hero-description {
-            max-width: 850px;
-            margin: 0;
-            color: var(--muted);
-            font-size: 1rem;
-        }
+    .tasks {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
 
-        .course-badge {
-            display: inline-block;
-            margin-bottom: 18px;
-            padding: 5px 10px;
-            border-radius: 999px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            color: var(--accent);
-            font-size: 0.78rem;
-            font-weight: 700;
-        }
+    .task {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
 
-        /* =========================
-           TASKS
-           ========================= */
+    .task-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
 
-        .tasks-section {
-            padding: 20px 0 70px;
-        }
+    .number {
+      min-width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: var(--surface-2);
+      color: var(--accent);
+      font-weight: 850;
+    }
 
-        .section-title {
-            margin: 0 0 22px;
-            font-size: 1.55rem;
-            letter-spacing: -0.025em;
-        }
+    .task h3 {
+      margin: 0;
+      font-size: 1.05rem;
+      line-height: 1.35;
+    }
 
-        .tasks {
-            display: grid;
-            gap: 18px;
-        }
+    .task p {
+      color: var(--muted);
+      margin: 10px 0 18px;
+      font-size: .94rem;
+    }
 
-        .task {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 15px;
-            padding: 24px;
-            box-shadow: var(--shadow);
-            transition:
-                transform 0.2s ease,
-                border-color 0.2s ease,
-                background-color 0.2s ease;
-        }
+    .links {
+      margin-top: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
 
-        .task:hover {
-            transform: translateY(-2px);
-            border-color: color-mix(
-                in srgb,
-                var(--accent) 45%,
-                var(--border)
-            );
-            background: var(--surface-hover);
-        }
+    .link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 7px 10px;
+      font-size: .85rem;
+      background: var(--surface-2);
+      color: var(--text);
+      text-decoration: none;
+    }
 
-        .task-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 15px;
-            margin-bottom: 10px;
-        }
+    .link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
 
-        .task-title {
-            margin: 0;
-            font-size: 1.12rem;
-            line-height: 1.35;
-        }
+    .available { color: var(--success); }
+    .external { color: var(--warning); }
 
-        .task-number {
-            color: var(--accent);
-        }
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
 
-        .status {
-            flex-shrink: 0;
-            display: inline-flex;
-            align-items: center;
-            border-radius: 999px;
-            padding: 4px 9px;
-            font-size: 0.72rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
+    .resource {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+    }
 
-        .status.done {
-            color: var(--success);
-            background: var(--success-bg);
-        }
+    .resource p {
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
 
-        .status.progress {
-            color: var(--warning);
-            background: var(--warning-bg);
-        }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0 40px;
+      color: var(--muted);
+      background: var(--surface);
+    }
 
-        .task-description {
-            margin: 0 0 16px;
-            color: var(--muted);
-            font-size: 0.94rem;
-        }
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
 
-        .task-links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
+    code {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 1px 5px;
+    }
 
-        .task-link {
-            display: inline-flex;
-            align-items: center;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            border-radius: 8px;
-            padding: 6px 10px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            transition: 0.2s ease;
-        }
+    @media (max-width: 850px) {
+      .tasks, .resource-grid { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .header-row { flex-direction: column; }
+    }
 
-        .task-link:hover {
-            background: var(--surface);
-            border-color: var(--accent);
-            text-decoration: none;
-        }
-
-        .task-label {
-            display: inline-block;
-            margin-bottom: 10px;
-            color: var(--muted);
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-
-        /* =========================
-           FOOTER
-           ========================= */
-
-        footer {
-            border-top: 1px solid var(--border);
-            padding: 28px 0 40px;
-            color: var(--muted);
-            font-size: 0.85rem;
-        }
-
-        .footer-inner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .footer-inner p {
-            margin: 0;
-        }
-
-        /* =========================
-           RESPONSIVE
-           ========================= */
-
-        @media (max-width: 700px) {
-            .container {
-                width: min(100% - 22px, 1120px);
-            }
-
-            .hero {
-                padding: 45px 0 30px;
-            }
-
-            .hero h1 {
-                font-size: 2.25rem;
-            }
-
-            .task {
-                padding: 19px;
-            }
-
-            .task-header {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .footer-inner {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-    </style>
+    @media (max-width: 480px) {
+      .container { width: min(100% - 22px, 1180px); }
+      header { padding-top: 42px; }
+      .stats { grid-template-columns: 1fr; }
+      .task { padding: 18px; }
+    }
+  </style>
 </head>
-
 <body>
-
-<header>
-    <div class="container header-inner">
-        <div class="brand">
-            <span class="brand-title">DCA3703: Programação Paralela</span>
-            <span class="brand-subtitle">Atividades práticas, lições e relatórios</span>
-        </div>
-
-        <button
-            class="theme-button"
-            id="themeToggle"
-            type="button"
-            aria-label="Alternar tema"
-        >
-            🌙 Tema
-        </button>
+  <header>
+    <div class="container header-row">
+      <div>
+        <p class="eyebrow">DCA3703</p>
+        <h1>Programação Paralela</h1>
+        <p class="subtitle">
+          Atividades práticas, aulas, relatórios, códigos e resultados organizados
+          em um único ponto de acesso.
+        </p>
+      </div>
+      <button id="themeToggle" type="button" aria-label="Alternar tema">🌙 Tema escuro</button>
     </div>
-</header>
+  </header>
 
-<main>
+  <main class="container">
+    <section>
+      <div class="intro">
+        <h2>Introdução</h2>
+        <p>
+          Este portal reúne o material produzido ao longo das atividades de
+          Programação Paralela. Cada tarefa pode conter uma aula complementar,
+          relatório, código-fonte, scripts e resultados experimentais.
+        </p>
+        <p>
+          As aulas ficam em <code>docs/lessons/</code>. Os arquivos originais
+          e resultados das atividades ficam nas respectivas pastas
+          <code>Tarefa_*</code> do repositório.
+        </p>
+      </div>
 
-    <section class="hero">
-        <div class="container">
-
-            <span class="course-badge">
-                Engenharia de Computação • UFRN
-            </span>
-
-            <h1>Programação Paralela</h1>
-
-            <p class="hero-subtitle">
-                Atividades práticas, lições e relatórios
-            </p>
-
-            <p class="hero-description">
-                Materiais da disciplina DCA3703 (Programação Paralela).
-                Cada tarefa reúne teoria, prática, referência rápida,
-                exemplos de código, experimentos e relatórios.
-            </p>
-
-        </div>
+      <div class="stats">
+        <div class="stat"><strong>18</strong><span>Tarefas</span></div>
+        <div class="stat"><strong>10+</strong><span>Quizzes por aula, quando disponíveis</span></div>
+        <div class="stat"><strong>HTML</strong><span>Aulas autocontidas</span></div>
+        <div class="stat"><strong>MPI / OpenMP</strong><span>Principais modelos estudados</span></div>
+      </div>
     </section>
 
-
-    <section class="tasks-section">
-        <div class="container">
-
-            <h2 class="section-title">Tarefas</h2>
-
-            <div class="tasks">
-
-                <!-- TAREFA 01 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 01:</span>
-                            Leibniz, poder computacional e limites sequenciais
-                        </h3>
-
-                        <span class="status done">Concluída</span>
-                    </div>
-
-                    <p class="task-description">
-                        Poder computacional, limites físicos dos processadores
-                        sequenciais e núcleos físicos e lógicos, relacionados
-                        ao custo e à precisão da aproximação de π.
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="lessons/0001-tarefa01-leibniz-pi.html">
-                            Material 01 →
-                        </a>
-
-                        <a class="task-link"
-                           href="lessons/0001-tarefa01-leibniz-pi.html#teoria">
-                            Fundamentação teórica →
-                        </a>
-
-                        <a class="task-link"
-                           href="lessons/0001-tarefa01-leibniz-pi.html#referencia-rapida">
-                            Referência rápida →
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa01/relatorio.pdf">
-                            Relatório PDF →
-                        </a>
-                    </div>
-                </article>
-
-
-                <!-- TAREFA 02 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 02:</span>
-                            Multiplicação matriz-vetor e cache
-                        </h3>
-
-                        <span class="status done">Concluída</span>
-                    </div>
-
-                    <p class="task-description">
-                        Hierarquia de memória (L1, L2, L3), localidade espacial
-                        e temporal, linhas de 64 bytes e comparação entre
-                        acessos row-major e column-major.
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="lessons/0002-tarefa02-mxv-cache.html">
-                            Material 02 →
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa02/relatorio.pdf">
-                            Relatório PDF →
-                        </a>
-                    </div>
-                </article>
-
-
-                <!-- TAREFA 03 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 03:</span>
-                            Paralelismo ao nível de instrução (ILP)
-                        </h3>
-
-                        <span class="status done">Concluída</span>
-                    </div>
-
-                    <p class="task-description">
-                        Execução superescalar, quebra da cadeia de dependências
-                        RAW com múltiplos acumuladores e efeito das flags de
-                        otimização -O0, -O2 e -O3.
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="lessons/0003-tarefa03-ilp-acumuladores.html">
-                            Material 03 →
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa03/relatorio.pdf">
-                            Relatório PDF →
-                        </a>
-                    </div>
-                </article>
-
-
-                <!-- TAREFA 04 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 04:</span>
-                            Aplicações limitadas por Memória e CPU
-                        </h3>
-
-                        <span class="status done">Concluída</span>
-                    </div>
-
-                    <p class="task-description">
-                        Gargalo de von Neumann, intensidade aritmética e impacto
-                        do multithreading em aplicações limitadas por memória e CPU.
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="lessons/0004-tarefa04-memory-cpu-bound.html">
-                            Material 04 →
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa04/relatorio.pdf">
-                            Relatório PDF →
-                        </a>
-                    </div>
-                </article>
-
-
-                <!-- TAREFA 05 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 05:</span>
-                            Contagem de Primos e Condições de Corrida
-                        </h3>
-
-                        <span class="status done">Concluída</span>
-                    </div>
-
-                    <p class="task-description">
-                        Paralelismo de laços com OpenMP, observação de race
-                        conditions e desbalanceamento de carga.
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="lessons/0005-tarefa05-primos-openmp.html">
-                            Material 05 →
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa05/relatorio.pdf">
-                            Relatório PDF →
-                        </a>
-                    </div>
-                </article>
-
-
-                <!-- TAREFA 06 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 06:</span>
-                            Estimativa de π (Monte Carlo) e Cláusulas OpenMP
-                        </h3>
-
-                        <span class="status done">Concluída</span>
-                    </div>
-
-                    <p class="task-description">
-                        Método de Monte Carlo, condições de corrida, sincronização
-                        com critical vs acumuladores locais e escopo de dados
-                        shared, private, firstprivate, lastprivate e default(none).
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="lessons/0010-tarefa06-montecarlo-escopo.html">
-                            Material 06 →
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa06/relatorio.pdf">
-                            Relatório PDF →
-                        </a>
-                    </div>
-                </article>
-
-
-                <!-- TAREFA 07 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 07:</span>
-                            Lista encadeada, tasks e single
-                        </h3>
-
-                        <span class="status done">Concluída</span>
-                    </div>
-
-                    <p class="task-description">
-                        Lista encadeada com task, single, taskwait e work-stealing.
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="lessons/0006-tarefa07-lista-task.html">
-                            Material 07 →
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa07/relatorio.pdf">
-                            Relatório PDF →
-                        </a>
-                    </div>
-                </article>
-
-
-                <!-- TAREFA 08 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 08:</span>
-                            π estocástico, rand/rand_r e false sharing
-                        </h3>
-
-                        <span class="status done">Concluída</span>
-                    </div>
-
-                    <p class="task-description">
-                        Monte Carlo com rand() vs rand_r(), redução via critical
-                        vs vetor hits[tid], protocolo MESI e padding de 64 bytes.
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="lessons/0008-tarefa08-pi-rand-false-sharing.html">
-                            Material 08 →
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa08/relatorio.pdf">
-                            Relatório PDF →
-                        </a>
-                    </div>
-                </article>
-
-
-                <!-- TAREFA 09 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 09:</span>
-                            Listas, critical nomeado e locks
-                        </h3>
-
-                        <span class="status done">Concluída</span>
-                    </div>
-
-                    <p class="task-description">
-                        Tasks com rand_r(), critical(lista0) vs critical(lista1)
-                        e vetor locks[N] com init, set, unset e destroy.
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="lessons/0009-tarefa09-critical-locks.html">
-                            Material 09 →
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa09/relatorio.pdf">
-                            Relatório PDF →
-                        </a>
-                    </div>
-                </article>
-
-
-                <!-- TAREFA 10 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 10:</span>
-                            atomic, critical e reduction
-                        </h3>
-
-                        <span class="status done">Concluída</span>
-                    </div>
-
-                    <p class="task-description">
-                        Comparativo entre shared mais critical, atomic, privado
-                        mais critical, vetor e reduction com rand_r.
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="lessons/0010-tarefa10-atomic-critical-reduction.html">
-                            Material 10 →
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa10/relatorio.pdf">
-                            Relatório PDF →
-                        </a>
-                    </div>
-                </article>
-
-
-                <!-- TAREFA 11 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 11:</span>
-                            Particionamento de dados e balanceamento de carga
-                        </h3>
-
-                        <span class="status done">Concluída</span>
-                    </div>
-
-                    <p class="task-description">
-                        Difusão 2D validada: campos zero, constante e gaussiano;
-                        sete variantes medidas de 1 a 28 threads. Artefatos
-                        complementares em tarefa11/extras/.
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="lessons/0011-tarefa11-difusao-schedule.html">
-                            Material 11
-                        </a>
-
-                        <a class="task-link"
-                           href="lessons/0011-tarefa11-difusao-schedule.html#visualizacao-3d">
-                            Extra: visualização 3D
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa11/relatorio.pdf">
-                            Relatório PDF
-                        </a>
-                    </div>
-                </article>
-
-
-                <!-- TAREFA 12 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 12:</span>
-                            Escalabilidade no NPAD
-                        </h3>
-
-                        <span class="status progress">
-                            Em andamento · piloto executado
-                        </span>
-                    </div>
-
-                    <p class="task-description">
-                        Cinco versões da difusão viscosa, escalabilidade forte
-                        e fraca, scripts Slurm e coleta para o PaScal Viewer.
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="lessons/0012-tarefa12-escalabilidade-npad.html">
-                            Material 12
-                        </a>
-
-                        <a class="task-link"
-                           href="lessons/0012-tarefa12-escalabilidade-npad.html#referencia-rapida">
-                            Referência rápida
-                        </a>
-
-                        <a class="task-link"
-                           href="assets/guia-comandos-npad.md">
-                            Executar no NPAD
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa12/relatorio.pdf">
-                            Relatório preliminar
-                        </a>
-                    </div>
-                </article>
-
-
-                <!-- TAREFA 13 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 13:</span>
-                            Afinidade de threads e NUMA
-                        </h3>
-
-                        <span class="status done">
-                            Concluída · job 2107610
-                        </span>
-                    </div>
-
-                    <p class="task-description">
-                        Quatro configurações novas de OMP_PROC_BIND e OMP_PLACES,
-                        medidas com o mesmo código e comparadas no PaScal Viewer.
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="lessons/0013-tarefa13-afinidade-numa.html">
-                            Material 13
-                        </a>
-
-                        <a class="task-link"
-                           href="lessons/0013-tarefa13-afinidade-numa.html#referencia-rapida">
-                            Referência rápida
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa13/afinidade.slurm">
-                            Script Slurm
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa13/relatorio.pdf">
-                            Relatório
-                        </a>
-                    </div>
-                </article>
-
-
-                <!-- TAREFA 14 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 14:</span>
-                            Programação em memória distribuída
-                        </h3>
-
-                        <span class="status done">Concluída</span>
-                    </div>
-
-                    <span class="task-label">MPI</span>
-
-                    <p class="task-description">
-                        Troca de mensagens entre exatamente dois processos,
-                        medição com MPI_Wtime e gráfico de tempo em função
-                        do tamanho da mensagem.
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="tarefa14/slides.html">
-                            Slides
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa14/tarefa14.slurm">
-                            Script Slurm
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa14/tarefa14.c">
-                            Código C
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa14/relatorio.pdf">
-                            Relatório PDF
-                        </a>
-                    </div>
-                </article>
-
-
-                <!-- TAREFA 15 -->
-                <article class="task">
-                    <div class="task-header">
-                        <h3 class="task-title">
-                            <span class="task-number">Tarefa 15:</span>
-                            Sobreposição de computação e comunicação
-                        </h3>
-
-                        <span class="status done">Concluída</span>
-                    </div>
-
-                    <span class="task-label">MPI</span>
-
-                    <p class="task-description">
-                        Difusão de calor 1D distribuída e comparação de
-                        comunicação bloqueante, não bloqueante e com MPI_Test.
-                    </p>
-
-                    <div class="task-links">
-                        <a class="task-link"
-                           href="tarefa15/tarefa15.c">
-                            Código C
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa15/tarefa15.slurm">
-                            Script Slurm
-                        </a>
-
-                        <a class="task-link"
-                           href="tarefa15/relatorio.pdf">
-                            Relatório PDF
-                        </a>
-                    </div>
-                </article>
-
-            </div>
-        </div>
+    <section id="tarefas">
+      <h2>Tarefas</h2>
+      <div class="tasks">
+
+        <article class="task">
+          <div class="task-head"><div class="number">01</div><div><h3>Leibniz, poder computacional e limites sequenciais</h3></div></div>
+          <p>Fundamentos de desempenho e limites do processamento sequencial.</p>
+          <div class="links">
+            <a class="link" href="lessons/0001-tarefa01-leibniz-pi.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_01" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">02</div><div><h3>Multiplicação matriz-vetor e cache</h3></div></div>
+          <p>Localidade de memória, acesso aos dados e impacto do cache.</p>
+          <div class="links">
+            <a class="link" href="lessons/0002-tarefa02-mxv-cache.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_02" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">03</div><div><h3>Paralelismo ao nível de instrução (ILP)</h3></div></div>
+          <p>Acumuladores, dependências e exploração do paralelismo no processador.</p>
+          <div class="links">
+            <a class="link" href="lessons/0003-tarefa03-ilp-acumuladores.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_03" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">04</div><div><h3>Aplicações limitadas por memória e CPU</h3></div></div>
+          <p>Comparação entre comportamentos memory-bound e CPU-bound.</p>
+          <div class="links">
+            <a class="link" href="lessons/0004-tarefa04-memory-cpu-bound.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_04" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">05</div><div><h3>Contagem de primos e condições de corrida</h3></div></div>
+          <p>Paralelização de contadores e problemas de acesso concorrente.</p>
+          <div class="links">
+            <a class="link" href="lessons/0005-tarefa05-primos-openmp.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_05" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">06</div><div><h3>Estimativa de π — Monte Carlo e escopo OpenMP</h3></div></div>
+          <p>Monte Carlo, variáveis compartilhadas/privadas e diretivas OpenMP.</p>
+          <div class="links">
+            <a class="link" href="lessons/0010-tarefa06-montecarlo-escopo.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_06" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">07</div><div><h3>Lista encadeada, tasks e single</h3></div></div>
+          <p>Criação de tarefas OpenMP sobre estruturas de dados encadeadas.</p>
+          <div class="links">
+            <a class="link" href="lessons/0006-tarefa07-lista-task.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_07" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">08</div><div><h3>π estocástico, rand/rand_r e false sharing</h3></div></div>
+          <p>Geradores aleatórios, concorrência e efeitos de cache entre threads.</p>
+          <div class="links">
+            <a class="link" href="lessons/0008-tarefa08-pi-rand-false-sharing.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_08" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">09</div><div><h3>Listas, critical nomeado e locks</h3></div></div>
+          <p>Sincronização de regiões críticas e uso de locks em OpenMP.</p>
+          <div class="links">
+            <a class="link" href="lessons/0009-tarefa09-critical-locks.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_09" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">10</div><div><h3>Atomic, critical e reduction</h3></div></div>
+          <p>Comparação entre mecanismos de sincronização e redução OpenMP.</p>
+          <div class="links">
+            <a class="link" href="lessons/0010-tarefa10-atomic-critical-reduction.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_10" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">11</div><div><h3>Particionamento de dados e balanceamento de carga</h3></div></div>
+          <p>Schedule, collapse, stencil 3D e diferenças finitas com OpenMP.</p>
+          <div class="links">
+            <a class="link" href="lessons/0011-tarefa11-difusao-schedule.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_11" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">12</div><div><h3>Escalabilidade no NPAD</h3></div></div>
+          <p>Tempo, speedup, eficiência e escalabilidade forte e fraca.</p>
+          <div class="links">
+            <a class="link" href="lessons/0012-tarefa12-escalabilidade-npad.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_12" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">13</div><div><h3>Afinidade de threads e NUMA</h3></div></div>
+          <p>Binding, OMP_PLACES, OMP_PROC_BIND e topologia de memória.</p>
+          <div class="links">
+            <a class="link" href="lessons/0013-tarefa13-afinidade-numa.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_13" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">14</div><div><h3>Programação em memória distribuída com MPI</h3></div></div>
+          <p>MPI_Init, ranks, comunicação ponto a ponto, latência e largura de banda.</p>
+          <div class="links">
+            <a class="link" href="lessons/0014-tarefa14-mpi.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_14" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">15</div><div><h3>Sobreposição de computação e comunicação</h3></div></div>
+          <p>MPI_Isend/Irecv, Wait/Test, troca de halos e sobreposição.</p>
+          <div class="links">
+            <a class="link" href="lessons/0015-tarefa15-mpi-overlap.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_15" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">16</div><div><h3>Operações coletivas MPI</h3></div></div>
+          <p>Bcast, Scatter, Gather e decomposição de dados em memória distribuída.</p>
+          <div class="links">
+            <a class="link" href="lessons/0016-tarefa16-mpi-coletivas.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_16" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">17</div><div><h3>Tarefa 17</h3></div></div>
+          <p>Material e resultados da atividade 17 conforme os arquivos do repositório.</p>
+          <div class="links">
+            <a class="link" href="lessons/0017-tarefa17.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_17" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+        <article class="task">
+          <div class="task-head"><div class="number">18</div><div><h3>Tarefa 18</h3></div></div>
+          <p>Material e resultados da atividade 18 conforme os arquivos do repositório.</p>
+          <div class="links">
+            <a class="link" href="lessons/0018-tarefa18.html">📖 Aula</a>
+            <a class="link external" href="https://github.com/josefelixeng/Programacao_Paralela/tree/main/Tarefa_18" target="_blank" rel="noopener">📁 Arquivos / resultados</a>
+          </div>
+        </article>
+
+      </div>
     </section>
 
-</main>
+    <section id="materiais">
+      <h2>Materiais e navegação</h2>
+      <div class="resource-grid">
+        <div class="resource">
+          <h3>📖 Aulas</h3>
+          <p>Conteúdo didático e quizzes organizados por tarefa.</p>
+          <a href="lessons/">Abrir diretório de aulas</a>
+        </div>
 
+        <div class="resource">
+          <h3>💻 Repositório</h3>
+          <p>Códigos, relatórios e resultados originais das atividades.</p>
+          <a href="https://github.com/josefelixeng/Programacao_Paralela" target="_blank" rel="noopener">
+            Abrir no GitHub
+          </a>
+        </div>
 
-<footer>
-    <div class="container footer-inner">
+        <div class="resource">
+          <h3>📊 Resultados</h3>
+          <p>Os links de cada tarefa levam diretamente à pasta correspondente no repositório.</p>
+          <a href="https://github.com/josefelixeng/Programacao_Paralela/tree/main" target="_blank" rel="noopener">
+            Ver estrutura do projeto
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
 
-        <p>
-            DCA3703 • UFRN
-        </p>
-
-        <p>
-            <a
-                href="https://github.com/EugenioVLopes/programacao-paralela"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                Repositório no GitHub →
-            </a>
-        </p>
-
+  <footer>
+    <div class="container footer-row">
+      <span>DCA3703 • Programação Paralela</span>
+      <a href="https://github.com/josefelixeng/Programacao_Paralela" target="_blank" rel="noopener">
+        GitHub
+      </a>
     </div>
-</footer>
+  </footer>
 
-
-<script>
+  <script>
     (() => {
-        const root = document.documentElement;
-        const button = document.getElementById("themeToggle");
+      const root = document.documentElement;
+      const button = document.getElementById("themeToggle");
+      const saved = localStorage.getItem("theme");
 
-        const savedTheme = localStorage.getItem("theme");
+      if (saved === "dark") {
+        root.dataset.theme = "dark";
+        button.textContent = "☀️ Tema claro";
+      }
 
-        if (savedTheme === "dark") {
-            root.setAttribute("data-theme", "dark");
+      button.addEventListener("click", () => {
+        const dark = root.dataset.theme === "dark";
+
+        if (dark) {
+          delete root.dataset.theme;
+          localStorage.setItem("theme", "light");
+          button.textContent = "🌙 Tema escuro";
+        } else {
+          root.dataset.theme = "dark";
+          localStorage.setItem("theme", "dark");
+          button.textContent = "☀️ Tema claro";
         }
-
-        function updateButton() {
-            const dark =
-                root.getAttribute("data-theme") === "dark";
-
-            button.textContent = dark
-                ? "☀️ Tema claro"
-                : "🌙 Tema escuro";
-        }
-
-        button.addEventListener("click", () => {
-            const dark =
-                root.getAttribute("data-theme") === "dark";
-
-            if (dark) {
-                root.removeAttribute("data-theme");
-                localStorage.setItem("theme", "light");
-            } else {
-                root.setAttribute("data-theme", "dark");
-                localStorage.setItem("theme", "dark");
-            }
-
-            updateButton();
-        });
-
-        updateButton();
+      });
     })();
-</script>
-
+  </script>
 </body>
 </html>
-

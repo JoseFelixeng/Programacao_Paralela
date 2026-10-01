@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarefa 01: Leibniz, poder computacional e limites sequenciais</title>
+    <style>
+        :root {
+            --bg: #f5f7fa;
+            --surface: #ffffff;
+            --surface-hover: #f8fafc;
+            --text: #172033;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --success: #15803d;
+            --success-bg: #dcfce7;
+            --warning: #b45309;
+            --warning-bg: #fef3c7;
+            --code-bg: #f1f5f9;
+            --shadow: 0 8px 25px rgba(15, 23, 42, 0.07);
+        }
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --surface: #111c31;
+            --surface-hover: #162238;
+            --text: #e5e7eb;
+            --muted: #94a3b8;
+            --border: #263449;
+            --accent: #60a5fa;
+            --accent-hover: #93c5fd;
+            --success: #4ade80;
+            --success-bg: rgba(34, 197, 94, 0.12);
+            --warning: #fbbf24;
+            --warning-bg: rgba(245, 158, 11, 0.12);
+            --code-bg: #1e293b;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.65;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { color: var(--accent-hover); text-decoration: underline; }
+        .container { width: min(960px, calc(100% - 32px)); margin: 0 auto; }
+        .lesson-header {
+            padding: 40px 0 60px;
+        }
+        .lesson-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 0 12px;
+        }
+        .lesson-header .task-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+        .lesson-header .task-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .lesson-intro {
+            max-width: 900px;
+            margin: 0 auto 24px;
+            color: var(--muted);
+            font-size: 1.05rem;
+        }
+        .task-details {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+        .task-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+        .task-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .task-description {
+            font-size: 0.95rem;
+            color: var(--text);
+            margin-bottom: 24px;
+        }
+        .context-section h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 24px 0 12px;
+        }
+        .context-section p {
+            line-height: 1.6;
+        }
+        .quiz-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+        .quiz-question {
+            margin-bottom: 20px;
+        }
+        .quiz-option {
+            display: block;
+            margin-bottom: 8px;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: background-color 0.2s;
+        }
+        .quiz-option:hover {
+            background: var(--surface-hover);
+        }
+        .quiz-option.correct {
+            background: var(--success);
+            color: #0f172a;
+        }
+        .quiz-option.incorrect {
+            background: var(--warning);
+            color: #721c24;
+        }
+        .answer-info {
+            margin-top: 16px;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+        .quick-ref {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 24px 0;
+        }
+        .quick-ref h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .quick-ref ul {
+            list-style: none;
+            padding: 0;
+        }
+        .quick-ref li {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .quick-ref li:last-child {
+            border-bottom: none;
+        }
+        .conclusion {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .theme-toggle button {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .theme-toggle button:hover {
+            background: var(--surface-hover);
+        }
+    </style>
+</head>
+<body>
+
+<div class="theme-toggle">
+    <button id="themeToggle" onclick="toggleTheme()">🌙 Tema</button>
+</div>
+
+<header class="container lesson-header">
+    <div class="lesson-header">
+        <h1>Tarefa 01: Leibniz, poder computacional e limites sequenciais</h1>
+    </div>
+</header>
+
+<main>
+    <section class="lesson-intro">
+        <p>Esta seção apresenta o contexto e a descrição da Tarefa 01.</p>
+    </section>
+
+    <section class="task-details">
+        <div class="task-number">Tarefa 01</div>
+        <h2 class="task-title">Leibniz, poder computacional e limites sequenciais</h2>
+        <p class="task-description">
+            Poder computacional, limites físicos dos processadores sequenciais e núcleos físicos e lógicos, relacionados ao custo e à precisão da aproximação de π.
+        </p>
+        <div class="context-section">
+            <h2>Contexto</h2>
+            <p>Esta tarefa explora os fundamentos do poder computacional e como a arquitetura de processadores sequenciais impõe limites na aproximação matemática de constantes como π. O foco está em entender a relação entre complexidade algorítmica, hierarquia de memória e a eficiência de algoritmos numéricos.</p>
+        </div>
+    </section>
+
+    <section class="task-details">
+        <h2>Teoria</h2>
+        <p>Os processadores sequenciais operam de forma linear, executando instruções uma após a outra. O limite de von Neumann estabelece que a velocidade de processamento é limitada pela velocidade de propagação de sinais elétricos nos circuitos. A hierarquia de memória (registros, cache L1/L2/L3, memória RAM) reduz a latência de acesso, mas introduz complexidades de sincronização. Para cálculos numéricos como a aproximação de π, a escolha entre algoritmos iterativos e recursivos, bem como o uso de paralelismo, impacta significativamente o desempenho.</p>
+        <p><strong>Conceitos-chave:</strong></p>
+        <ul>
+            <li><strong>Limite de von Neumann:</strong> Define o máximo teórico de operações por segundo em um sistema sequencial.</li>
+            <li><strong>Hierarquia de memória:</strong> Registros rápidos, cache L1/L2/L3, memória principal.</li>
+            <li><strong>Complexidade algorítmica:</strong> O(t) determina o crescimento do tempo de execução com o aumento da entrada.</li>
+            <li><strong>Aproximação de π:</strong> Algoritmos como a série de Leibniz ou o método de Monte Carlo.</li>
+        </ul>
+    </section>
+
+    <section class="task-details">
+        <h2>Prática</h2>
+        <p>Na prática, foi implementado um algoritmo de aproximação de π utilizando a série de Leibniz (π/4 = 1 - 1/3 + 1/5 - 1/7 + ...). O código foi executado em sistemas sequenciais com diferentes arquiteturas de memória para medir o impacto da hierarquia de memória no tempo de execução.</p>
+        <p>Experimentos foram realizados com:</p>
+        <ul>
+            <li>Processamento sequencial puro</li>
+            <li>Uso de cache L1/L2</li>
+            <li>Simulação de paralelismo (modelo de threads)</li>
+        </ul>
+        <p>Os resultados mostram que a hierarquia de memória reduz a latência média, mas o ganho de desempenho é limitado pela complexidade algorítmica do algoritmo.</p>
+    </section>
+
+    <section class="task-details">
+        <h2>Resultados e análise</h2>
+        <p>Os resultados indicam que:</p>
+        <ul>
+            <li>O algoritmo de Leibniz converge lentamente para valores maiores de n.</li>
+            <li>A hierarquia de memória melhora a performance em operações frequentes (acesso à cache).</li>
+            <li>O paralelismo de threads oferece ganhos moderados devido à sobrecarga de sincronização.</li>
+            <li>A complexidade O(n) do algoritmo limita a escalabilidade para grandes valores de n.</li>
+        </ul>
+        <p>Comparativamente, o método de Monte Carlo apresenta convergência mais rápida, mas com erro estatístico.</p>
+    </section>
+
+    <section class="quick-ref id="referencia-rapida">
+        <h3>Referência Rápida</h3>
+        <ul>
+            <li><strong>Limite de von Neumann:</strong> Limita o número de operações por segundo em processadores sequenciais.</li>
+            <li><strong>Hierarquia de Memória:</strong> Registros (mais rápido), L1/L2 (rápido), L3 (médio), RAM (lento).</li>
+            <li><strong>Algoritmo de Leibniz:</strong> π/4 = Σ (-1)^k / (2k+1), converge lentamente.</li>
+            <li><strong>Paralelismo de Threads:</strong> Ganho moderado devido à sobrecarga de sincronização.</li>
+            <li><strong>Monte Carlo:</strong> Erro estatístico decrescente com mais iterações.</li>
+        </ul>
+    </section>
+
+    <section class="quiz-container">
+        <h2>Quiz: Tarefa 01</h2>
+        <div id="quiz-questions"></div>
+    </section>
+
+    <section class="conclusion">
+        <h2>Conclusão</h2>
+        <p>Esta tarefa demonstrou como a arquitetura de processadores sequenciais impõe limites na aproximação de constantes matemáticas. A hierarquia de memória reduz a latência, mas a complexidade algorítmica do algoritmo de Leibniz limita a escalabilidade. Para cálculos numéricos em paralelo, é essencial considerar tanto a eficiência do algoritmo quanto a hierarquia de memória.</p>
+    </section>
+
+    <script>
+        function toggleTheme() {
+            const root = document.documentElement;
+            const current = root.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            root.setAttribute('data-theme', newTheme);
+        }
+        
+        // Initialise theme
+        toggleTheme();
+    </script>
+</body>
+</html>
