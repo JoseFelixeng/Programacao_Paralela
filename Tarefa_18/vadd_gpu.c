@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <omp.h>
-#define N 10000000
+#define N 1000
 #define TOL  0.0000001
 //
 //  This is a simple program to add two vectors
@@ -51,9 +51,9 @@ int main()
    
    printf(" vectors added with %d errors\n",err);
 
-   printf("Init time:    %.3fs\n", init_time);
-   printf("Compute time: %.3fs\n", compute_time);
-   printf("Test time:    %.3fs\n", test_time);
-   printf("Total time:   %.3fs\n", init_time + compute_time + test_time);
+   printf("Init time:    %.6fs\n", init_time);
+   printf("Compute time: %.6fs\n", compute_time);
+   printf("Test time:    %.6fs\n", test_time);
+   printf("Total time:   %.6fs\n", init_time + compute_time + test_time);
    return 0;
 }

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <omp.h>
-#define N 10000000
+#define N 1000
 #define TOL  0.0000001
 //
 //  This is a simple program to add two vectors
