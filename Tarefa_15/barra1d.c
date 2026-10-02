@@ -23,15 +23,12 @@
 #define TAG_R 0   /* mensagem "andando para a direita" (enviada ao vizinho direito) */
 #define TAG_L 1   /* mensagem "andando para a esquerda" (enviada ao vizinho esquerdo) */
 
-static void atualizar_pontos(const double *u_old, double *u_new,
-                              int start, int end, double c)
-{
+static void atualizar_pontos(const double *u_old, double *u_new, int start, int end, double c){
     for (int i = start; i <= end; i++)
         u_new[i] = u_old[i] + c * (u_old[i + 1] - 2.0 * u_old[i] + u_old[i - 1]);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv){
     int rank, size;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -47,13 +44,14 @@ int main(int argc, char **argv)
     int base  = N_GLOBAL / size;
     int resto = N_GLOBAL % size;
     int n_local  = base + (rank < resto ? 1 : 0);
-    int offset   = (rank < resto) ? rank * (base + 1)
-                                   : resto * (base + 1) + (rank - resto) * base;
+    int offset   = (rank < resto) ? rank * (base + 1) : resto * (base + 1) + (rank - resto) * base;
 
     double *u_old = calloc(n_local + 2, sizeof(double));
     double *u_new = calloc(n_local + 2, sizeof(double));
-    if (!u_old || !u_new) { MPI_Abort(MPI_COMM_WORLD, 1); }
-
+   
+    if (!u_old || !u_new) { 
+        MPI_Abort(MPI_COMM_WORLD, 1); 
+    }
     /* Condicao inicial: pulso de calor no terco central do dominio global */
     for (int i = 1; i <= n_local; i++) {
         int gidx = offset + (i - 1);
@@ -139,10 +137,8 @@ int main(int argc, char **argv)
             while (next <= interior_end) {
                 int chunk_end = next + CHUNK_SIZE - 1;
                 if (chunk_end > interior_end) chunk_end = interior_end;
-
                 atualizar_pontos(u_old, u_new, next, chunk_end, ALPHA);
                 next = chunk_end + 1;
-
                 MPI_Testall(4, reqs, &comm_done, MPI_STATUSES_IGNORE);
             }
 

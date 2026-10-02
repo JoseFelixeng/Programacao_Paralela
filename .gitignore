@@ -57,4 +57,10 @@ Thumbs.db
 
 # Arquivos locais do agente
 .local/
+.pi-off/
+
+AGENTS.md 
+RESOURCES.md 
+SKILL.md
+Modelfile
 
