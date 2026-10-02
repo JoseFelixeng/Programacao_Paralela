@@ -7,6 +7,7 @@
 #SBATCH --output vadd-%j.out
 
 gcc -g -Wall -fopenmp vadd_p.c -o  vadd_p
+
 ulimit -s unlimited
 
 ./vadd_p
