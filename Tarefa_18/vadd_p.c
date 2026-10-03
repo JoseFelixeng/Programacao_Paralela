@@ -2,12 +2,7 @@
 #include <omp.h>
 #define N 10000000
 #define TOL  0.0000001
-//
-//  This is a simple program to add two vectors
-//  and verify the results.
-//
-//  History: Written by Tim Mattson, November 2017
-//
+
 int main()
 {
 
