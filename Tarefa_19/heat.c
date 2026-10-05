@@ -1,59 +1,97 @@
-// Código Heat.c base vindo direto do diretorio usando OpenMP com GPU 
-// Dois dados na entrada Numero de Celulas e Passo 
-// .heat.c 100 10
+
+/*
+** PROGRAM: heat equation solve
+**
+** PURPOSE: This program will explore use of an explicit
+**          finite difference method to solve the heat
+**          equation under a method of manufactured solution (MMS)
+**          scheme. The solution has been set to be a simple 
+**          function based on exponentials and trig functions.
+**
+**          A finite difference scheme is used on a 1000x1000 cube.
+**          A total of 0.5 units of time are simulated.
+**
+**          The MMS solution has been adapted from
+**          G.W. Recktenwald (2011). Finite difference approximations
+**          to the Heat Equation. Portland State University.
+**
+**
+** USAGE:   Run with two arguments:
+**          First is the number of cells.
+**          Second is the number of timesteps.
+**
+**          For example, with 100x100 cells and 10 steps:
+**
+**          ./heat 100 10
+**
+**
+** HISTORY: Written by Tom Deakin, Oct 2018
+**
+*/
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+
 #include <omp.h>
 
-// Constantes usadas no programa
+// Key constants used in this program
 #define PI acos(-1.0) // Pi
-#define LINE "--------------------\n" // Linha para saida formatada
+#define LINE "--------------------\n" // A line for fancy output
 
-// Definição das funções
+// Function definitions
 void initial_value(const int n, const double dx, const double length, double * restrict u);
 void zero(const int n, double * restrict u);
 void solve(const int n, const double alpha, const double dx, const double dt, const double * restrict u, double * restrict u_tmp);
 double solution(const double t, const double x, const double y, const double alpha, const double length);
 double l2norm(const int n, const double * restrict u, const int nsteps, const double dt, const double alpha, const double dx, const double length);
 
-// Main
+// Main function
 int main(int argc, char *argv[]) {
 
-  // Inicia o tempo de execução do 
+  // Start the total program runtime timer
   double start = omp_get_wtime();
-  int n = 1000; // tamanho do problema, forma um grid nxn 
-  int nsteps = 10; //numero de passos no tempo
+
+  // Problem size, forms an nxn grid
+  int n = 1000;
+
+  // Number of timesteps
+  int nsteps = 10;
 
 
-  // Checa o numero do argumento, printa e sai caso não seja o correto
+  // Check for the correct number of arguments
+  // Print usage and exits if not correct
   if (argc == 3) {
-    // Configura o tamanho do primeiro argumento 
+
+    // Set problem size from first argument
     n = atoi(argv[1]);
     if (n < 0) {
-      fprintf(stderr, "Error: n deve ser positivo\n");
+      fprintf(stderr, "Error: n must be positive\n");
       exit(EXIT_FAILURE);
     }
-    //configura o numero de passos de tempo 
+
+    // Set number of timesteps from second argument
     nsteps = atoi(argv[2]);
     if (nsteps < 0) {
-      fprintf(stderr, "Error: nstep deve ser positivo\n");
+      fprintf(stderr, "Error: nsteps must be positive\n");
       exit(EXIT_FAILURE);
     }
   }
 
-  // Configura a definição do problema
-  double alpha = 0.1;          // coeficiente da equação de difusão de calor
-  double length = 1000.0;      // tamanho físico do domínio: quadrado de lado x lado
-  double dx = length / (n+1);  // tamanho físico de cada célula (+1, pois não simulamos as fronteiras, já que elas são fornecidas)
-  double dt = 0.5 / nsteps;    // ntervalo de tempo (tempo total de 0,5 s)
+
+  //
+  // Set problem definition
+  //
+  double alpha = 0.1;          // heat equation coefficient
+  double length = 1000.0;      // physical size of domain: length x length square
+  double dx = length / (n+1);  // physical size of each cell (+1 as don't simulate boundaries as they are given)
+  double dt = 0.5 / nsteps;    // time interval (total time of 0.5s)
 
 
-  // A estabilidade requer que dt/(dx^2) <= 0.5,
+  // Stability requires that dt/(dx^2) <= 0.5,
   double r = alpha * dt / (dx * dx);
 
-  // Detalhes da execução
+  // Print message detailing runtime configuration
   printf("\n");
   printf(" MMS heat equation\n\n");
   printf(LINE);
@@ -69,7 +107,7 @@ int main(int argc, char *argv[]) {
   printf(" Time step: %E\n", dt);
   printf(LINE);
 
-  // Checando a estabilidade 
+  // Stability check
   printf("Stability\n\n");
   printf(" r value: %lf\n", r);
   if (r > 0.5)
@@ -77,61 +115,78 @@ int main(int argc, char *argv[]) {
   printf(LINE);
 
 
-  // Alocando o grid nxn 
+  // Allocate two nxn grids
   double *u     = malloc(sizeof(double)*n*n);
   double *u_tmp = malloc(sizeof(double)*n*n);
   double *tmp;
 
-  // Configurando a inicialização 
+  // Set the initial value of the grid under the MMS scheme
   initial_value(n, dx, length, u);
   zero(n, u_tmp);
 
-  // Execute a simulação ao longo dos passos de tempo utilizando o esquema explícito
-  double tic = omp_get_wtime(); //Inicie o temporizador da rotina `solve`
+  //
+  // Run through timesteps under the explicit scheme
+  //
+
+  // Start the solve timer
+  double tic = omp_get_wtime();
   for (int t = 0; t < nsteps; ++t) {
-    // Chame o *kernel* de resolução (*solve kernel*), Calcula u_tmp no próximo passo de tempo,com base no valor de u no passo de tempo atual
+
+    // Call the solve kernel
+    // Computes u_tmp at the next timestep
+    // given the value of u at the current timestep
     solve(n, alpha, dx, dt, u, u_tmp);
-    // Ponteiro de troca
+
+    // Pointer swap
     tmp = u;
     u = u_tmp;
     u_tmp = tmp;
   }
+  // Stop solve timer
+  double toc = omp_get_wtime();
 
-  double toc = omp_get_wtime(); // fim da contagem de tempo
-  // Verifique a norma L2 da solução calculada em relação à solução *conhecida* do esquema MMS
-  double norm = l2norm(n, u, nsteps, dt, alpha, dx, length); 
-  double stop = omp_get_wtime(); // Para o tempo total
+  //
+  // Check the L2-norm of the computed solution
+  // against the *known* solution from the MMS scheme
+  //
+  double norm = l2norm(n, u, nsteps, dt, alpha, dx, length);
 
-  //Resultados
+  // Stop total timer
+  double stop = omp_get_wtime();
+
+  // Print results
   printf("Results\n\n");
   printf("Error (L2norm): %E\n", norm);
   printf("Solve time (s): %lf\n", toc-tic);
   printf("Total time (s): %lf\n", stop-start);
   printf(LINE);
 
-  // libera a memoria
+  // Free the memory
   free(u);
   free(u_tmp);
+
 }
 
 
-// Define a malha com um valor inicial, determinado pelo esquema MMS
+// Sets the mesh to an initial value, determined by the MMS scheme
 void initial_value(const int n, const double dx, const double length, double * restrict u) {
+
   double y = dx;
   for (int j = 0; j < n; ++j) {
-    double x = dx; // Posição física x
+    double x = dx; // Physical x position
     for (int i = 0; i < n; ++i) {
       u[i+j*n] = sin(PI * x / length) * sin(PI * y / length);
       x += dx;
     }
-    y += dx; // Posição física y
+    y += dx; // Physical y position
   }
 
 }
 
 
-// Zere o array u
+// Zero the array u
 void zero(const int n, double * restrict u) {
+
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < n; ++j) {
       u[i+j*n] = 0.0;
@@ -143,46 +198,58 @@ void zero(const int n, double * restrict u) {
 
 // Compute the next timestep, given the current timestep
 void solve(const int n, const double alpha, const double dx, const double dt, const double * restrict u, double * restrict u_tmp) {
-  // Multiplicador constante de diferenças finitas
-  #pragma omp target map(tofrom: u[0:n], u_tmp[0:n])
-  {
-    const double r = alpha * dt / (dx * dx);
-    const double r2 = 1.0 - 4.0*r;
-  
-    // Itere sobre a grade *n* x *n*
-    for (int i = 0; i < n; ++i) {
-      for (int j = 0; j < n; ++j) {
-      //Atualiza o stencil de 5 pontos, utilizando condições de contorno nas bordas do domínio. Os valores de contorno são zero porque a solução MMS é zero nesses pontos.
-        u_tmp[i+j*n] =  r2 * u[i+j*n] +
-        r * ((i < n-1) ? u[i+1+j*n] : 0.0) +
-        r * ((i > 0)   ? u[i-1+j*n] : 0.0) +
-        r * ((j < n-1) ? u[i+(j+1)*n] : 0.0) +
-        r * ((j > 0)   ? u[i+(j-1)*n] : 0.0);
-      }
-    }
 
+  // Finite difference constant multiplier
+  const double r = alpha * dt / (dx * dx);
+  const double r2 = 1.0 - 4.0*r;
+
+  // Loop over the nxn grid
+  for (int i = 0; i < n; ++i) {
+    for (int j = 0; j < n; ++j) {
+
+      // Update the 5-point stencil, using boundary conditions on the edges of the domain.
+      // Boundaries are zero because the MMS solution is zero there.
+      u_tmp[i+j*n] =  r2 * u[i+j*n] +
+      r * ((i < n-1) ? u[i+1+j*n] : 0.0) +
+      r * ((i > 0)   ? u[i-1+j*n] : 0.0) +
+      r * ((j < n-1) ? u[i+(j+1)*n] : 0.0) +
+      r * ((j > 0)   ? u[i+(j-1)*n] : 0.0);
+    }
   }
 }
-// Solução correta fornecida pela solução manufaturada.
+
+
+// True answer given by the manufactured solution
 double solution(const double t, const double x, const double y, const double alpha, const double length) {
+
   return exp(-2.0*alpha*PI*PI*t/(length*length)) * sin(PI*x/length) * sin(PI*y/length);
+
 }
 
 
-// Calcula a norma L2 da grade calculada em relação à solução conhecida via MMS. A solução conhecida é a mesma que a função de contorno.
+// Computes the L2-norm of the computed grid and the MMS known solution
+// The known solution is the same as the boundary function.
 double l2norm(const int n, const double * restrict u, const int nsteps, const double dt, const double alpha, const double dx, const double length) {
-  double time = dt * (double)nsteps;// Final (real) tempo da simulação0
-  double l2norm = 0.0; // Erro da norma L2
-  // Percorra a grade e calcule a diferença entre as soluções calculadas e as conhecidas como uma norma L2.
+
+  // Final (real) time simulated
+  double time = dt * (double)nsteps;
+
+  // L2-norm error
+  double l2norm = 0.0;
+
+  // Loop over the grid and compute difference of computed and known solutions as an L2-norm
   double y = dx;
   for (int j = 0; j < n; ++j) {
     double x = dx;
     for (int i = 0; i < n; ++i) {
       double answer = solution(time, x, y, alpha, length);
       l2norm += (u[i+j*n] - answer) * (u[i+j*n] - answer);
+
       x += dx;
     }
     y += dx;
   }
+
   return sqrt(l2norm);
+
 }

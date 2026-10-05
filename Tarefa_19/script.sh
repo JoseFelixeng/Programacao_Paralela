@@ -1,13 +1,14 @@
 #!/bin/bash
-#SBATCH --partition=gpu-4-a100 
-#SBATCH --gpus-per-node=2 
+#SBATCH --partition=amd-512
 #SBATCH --nodes 1
 #SBATCH --time 00:30:00
 #SBATCH --job-name heat
 #SBATCH --output heat-%j.out
 
-gcc -g -Wall -fopenmp heat.c -o  heat
+cd $SLURM_SUBMIT_DIR
+
+gcc -g -Wall -fopenmp heat.c -o heat -lm 
 
 ulimit -s unlimited
 
-./heat
+./heat 8000 10 
