@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
   // Execute a simulação ao longo dos passos de tempo utilizando o esquema explícito
   double tic = omp_get_wtime(); //Inicie o temporizador da rotina `solve`
   
-  #pragma omp target data map(tofrom: u[0:n*n], u_tmp[0:n*n])
+  #pragma omp target data enter map(tofrom: u[0:n*n], u_tmp[0:n*n])
   {
     for (int t = 0; t < nsteps; ++t) {
       // Chame o *kernel* de resolução (*solve kernel*), Calcula u_tmp no próximo passo de tempo,com base no valor de u no passo de tempo atual
@@ -99,6 +99,7 @@ int main(int argc, char *argv[]) {
       u = u_tmp;
       u_tmp = tmp;
     }
+    #pragma omp target data exit map(tofrom: u[0:n*n], u_tmp[0:n*n])// usada para trazer os dados da GPU -> CPU 
   }
 
   double toc = omp_get_wtime(); // fim da contagem de tempo
@@ -153,6 +154,7 @@ void solve(const int n, const double alpha, const double dx, const double dt, co
   const double r2 = 1.0 - 4.0*r;
   
   // Itere sobre a grade *n* x *n*
+  #pragma omp target
   #pragma omp loop collapse(2)
     for (int i = 0; i < n; ++i) {
       for (int j = 0; j < n; ++j) {
