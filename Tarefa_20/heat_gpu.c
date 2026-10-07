@@ -89,18 +89,16 @@ int main(int argc, char *argv[]) {
   // Execute a simulação ao longo dos passos de tempo utilizando o esquema explícito
   double tic = omp_get_wtime(); //Inicie o temporizador da rotina `solve`
   
-  #pragma omp target data enter map(tofrom: u[0:n*n], u_tmp[0:n*n])
-  {
-    for (int t = 0; t < nsteps; ++t) {
-      // Chame o *kernel* de resolução (*solve kernel*), Calcula u_tmp no próximo passo de tempo,com base no valor de u no passo de tempo atual
+  #pragma omp target enter data map(to: u[0:n*n]) map(alloc: u_tmp[0:n*n])
+  for (int t = 0; t < nsteps; ++t) {
       solve(n, alpha, dx, dt, u, u_tmp);
-      // Ponteiro de troca
       tmp = u;
       u = u_tmp;
       u_tmp = tmp;
-    }
-    #pragma omp target data exit map(tofrom: u[0:n*n], u_tmp[0:n*n])// usada para trazer os dados da GPU -> CPU 
   }
+
+  #pragma omp target update from(u[0:n*n])
+  #pragma omp target exit data map(from: u[0:n*n]) map(release: u_tmp[0:n*n])
 
   double toc = omp_get_wtime(); // fim da contagem de tempo
   // Verifique a norma L2 da solução calculada em relação à solução *conhecida* do esquema MMS
