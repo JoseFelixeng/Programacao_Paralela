@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Lições práticas, teoria de hardware e relatórios da disciplina DCA3703 (Programação Paralela) na UFRN.">
+  <title>DCA3703: Programação Paralela (UFRN)</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  <script>
+    function applyMath(el = document.body) {
+      if (window.renderMathInElement) {
+        renderMathInElement(el, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+    document.addEventListener("DOMContentLoaded", () => applyMath());
+    window.addEventListener("load", () => applyMath());
+  </script>
+</head>
+<body>
+  <nav class="top-nav">
+    <strong>DCA3703: Programação Paralela</strong>
+    <button class="theme-toggle-btn" onclick="toggleTheme()">Alternar tema</button>
+  </nav>
+
+  <header>
+    <h1>Programação Paralela</h1>
+    <div class="metadata">
+      Atividades práticas, lições e relatórios &bull; Prof. Samuel Xavier de Souza
+    </div>
+  </header>
+
+  <main>
+    <section id="sobre">
+      <p>
+        Materiais da disciplina DCA3703 (Programação Paralela) do curso de Engenharia de Computação da UFRN. As tarefas 01 a 13 têm lições HTML; as tarefas 14 e 15 têm slides, código C e relatório.
+      </p>
+    </section>
+
+    <section id="tarefas">
+      <h2 style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;">Tarefas</h2>
+      <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 1.2em;">
+
+        <!-- Tarefa 01 -->
+        <div class="source-card" style="margin: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 01: Leibniz, poder computacional e limites sequenciais</h3>
+            <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+          </div>
+          <p style="margin-bottom: 12px; font-size: 0.95rem; color: var(--text-muted);">
+            Poder computacional, limites físicos dos processadores sequenciais e núcleos físicos e lógicos, relacionados ao custo e à precisão da aproximação de $\pi$.
+          </p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.88rem;">
+            <a href="lessons/0001-tarefa01-leibniz-pi.html">Material 01 &rarr;</a>
+            <a href="lessons/0001-tarefa01-leibniz-pi.html#teoria">Fundamentação teórica &rarr;</a>
+            <a href="lessons/0001-tarefa01-leibniz-pi.html#referencia-rapida">Referência rápida &rarr;</a>
+            <a href="tarefa01/relatorio.pdf" target="_blank">Relatório PDF &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Tarefa 02 -->
+        <div class="source-card" style="margin: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 02: Multiplicação matriz-vetor e cache</h3>
+            <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+          </div>
+          <p style="margin-bottom: 12px; font-size: 0.95rem; color: var(--text-muted);">
+            Hierarquia de memória (L1, L2, L3), localidade espacial e temporal, linhas de 64 bytes e comparação entre acessos row-major e column-major.
+          </p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.88rem;">
+            <a href="lessons/0002-tarefa02-mxv-cache.html">Material 02 &rarr;</a>
+            <a href="tarefa02/relatorio.pdf" target="_blank">Relatório PDF &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Tarefa 03 -->
+        <div class="source-card" style="margin: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 03: Paralelismo ao nível de instrução (ILP)</h3>
+            <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+          </div>
+          <p style="margin-bottom: 12px; font-size: 0.95rem; color: var(--text-muted);">
+            Execução superescalar, quebra da cadeia de dependências RAW com múltiplos acumuladores e efeito das flags de otimização <code>-O0</code>, <code>-O2</code> e <code>-O3</code>.
+          </p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.88rem;">
+            <a href="lessons/0003-tarefa03-ilp-acumuladores.html">Material 03 &rarr;</a>
+            <a href="tarefa03/relatorio.pdf" target="_blank">Relatório PDF &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Tarefa 04 -->
+        <div class="source-card" style="margin: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 04: Aplicações limitadas por Memória e CPU</h3>
+            <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+          </div>
+          <p style="margin-bottom: 12px; font-size: 0.95rem; color: var(--text-muted);">
+            Gargalo de von Neumann, intensidade aritmética e impacto do multithreading em aplicações limitadas por memória e CPU.
+          </p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.88rem;">
+            <a href="lessons/0004-tarefa04-memory-cpu-bound.html">Material 04 &rarr;</a>
+            <a href="tarefa04/relatorio.pdf" target="_blank">Relatório PDF &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Tarefa 05 -->
+        <div class="source-card" style="margin: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 05: Contagem de Primos e Condições de Corrida</h3>
+            <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+          </div>
+          <p style="margin-bottom: 12px; font-size: 0.95rem; color: var(--text-muted);">
+            Paralelismo de laços com OpenMP, observação de race conditions e desbalanceamento de carga.
+          </p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.88rem;">
+            <a href="lessons/0005-tarefa05-primos-openmp.html">Material 05 &rarr;</a>
+            <a href="tarefa05/relatorio.pdf" target="_blank">Relatório PDF &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Tarefa 06 -->
+        <div class="source-card" style="margin: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 06: Estimativa de &pi; (Monte Carlo) e Cláusulas OpenMP</h3>
+            <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+          </div>
+          <p style="margin-bottom: 12px; font-size: 0.95rem; color: var(--text-muted);">
+            Método de Monte Carlo, condições de corrida, sincronização com <code>critical</code> vs acumuladores locais e escopo de dados (<code>shared</code>, <code>private</code>, <code>firstprivate</code>, <code>lastprivate</code> e <code>default(none)</code>).
+          </p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.88rem;">
+            <a href="lessons/0010-tarefa06-montecarlo-escopo.html">Material 06 &rarr;</a>
+            <a href="tarefa06/relatorio.pdf" target="_blank">Relatório PDF &rarr;</a>
+          </div>
+        </div>
+        <!-- Tarefa 07 -->
+        <div class="source-card" style="margin: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 07: lista encadeada, tasks e single</h3>
+            <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+          </div>
+          <p style="margin-bottom: 12px; font-size: 0.95rem; color: var(--text-muted);">
+            Lista encadeada com <code>task</code>, <code>single</code>, <code>taskwait</code> e work-stealing.
+          </p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.88rem;">
+            <a href="lessons/0006-tarefa07-lista-task.html">Material 07 &rarr;</a>
+            <a href="tarefa07/relatorio.pdf" target="_blank">Relatório PDF &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Tarefa 08 -->
+        <div class="source-card" style="margin: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 08: pi estocástico, rand/rand_r e false sharing</h3>
+            <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+          </div>
+          <p style="margin-bottom: 12px; font-size: 0.95rem; color: var(--text-muted);">
+            Monte Carlo com <code>rand()</code> vs <code>rand_r()</code>, redução via <code>critical</code> vs vetor <code>hits[tid]</code>, protocolo MESI e padding de 64 bytes.
+          </p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.88rem;">
+            <a href="lessons/0008-tarefa08-pi-rand-false-sharing.html">Material 08 &rarr;</a>
+            <a href="tarefa08/relatorio.pdf" target="_blank">Relatório PDF &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Tarefa 09 -->
+        <div class="source-card" style="margin: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 09: listas, critical nomeado e locks</h3>
+            <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+          </div>
+          <p style="margin-bottom: 12px; font-size: 0.95rem; color: var(--text-muted);">
+            Tasks com <code>rand_r()</code>, <code>critical(lista0)</code> vs <code>critical(lista1)</code> e vetor <code>locks[N]</code> com <code>init/set/unset/destroy</code>.
+          </p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.88rem;">
+            <a href="lessons/0009-tarefa09-critical-locks.html">Material 09 &rarr;</a>
+            <a href="tarefa09/relatorio.pdf" target="_blank">Relatório PDF &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Tarefa 10 -->
+        <div class="source-card" style="margin: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 10: atomic, critical e reduction</h3>
+            <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+          </div>
+          <p style="margin-bottom: 12px; font-size: 0.95rem; color: var(--text-muted);">
+            Comparativo entre shared mais critical, atomic, privado mais critical, vetor e reduction com rand_r.
+          </p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.88rem;">
+            <a href="lessons/0010-tarefa10-atomic-critical-reduction.html">Material 10</a>
+            <a href="tarefa10/relatorio.pdf" target="_blank">Relatório PDF</a>
+          </div>
+        </div>
+
+        <!-- Tarefa 11 -->
+        <div class="source-card" style="margin: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 11: Particionamento de dados e balanceamento de carga</h3>
+            <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+          </div>
+          <p style="margin-bottom: 12px; font-size: 0.95rem; color: var(--text-muted);">
+            Difusão 2D validada: campos zero, constante e gaussiano; sete variantes medidas de 1 a 28 threads. Artefatos complementares em tarefa11/extras/.
+          </p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.88rem;">
+            <a href="tarefa11/slides.html">Slides</a>
+            <a href="lessons/0011-tarefa11-difusao-schedule.html">Material 11</a>
+            <a href="lessons/0011-tarefa11-difusao-schedule.html#visualizacao-3d">Extra: visualização 3D · 2.100.000 passos</a>
+            <a href="tarefa11/relatorio.pdf" target="_blank">Relatório PDF</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section id="tarefa12">
+      <div class="source-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 12: escalabilidade no NPAD</h3>
+          <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+        </div>
+        <p>Quatro versões da difusão viscosa, escalabilidade forte e fraca, scripts Slurm e coleta para o PaScal Viewer.</p>
+        <p><a href="lessons/0012-tarefa12-escalabilidade-npad.html">Material 12</a> ·
+          <a href="lessons/0012-tarefa12-escalabilidade-npad.html#referencia-rapida">Referência rápida</a> ·
+          <a href="assets/guia-comandos-npad.md">Executar no NPAD</a> ·
+          <a href="tarefa12/relatorio.pdf">Relatório PDF</a></p>
+      </div>
+    </section>
+
+    <section id="tarefa13">
+      <div class="source-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 13: afinidade de threads e NUMA</h3>
+          <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+        </div>
+        <p>Quatro configurações novas de <code>OMP_PROC_BIND</code> e <code>OMP_PLACES</code>, medidas com o mesmo código e comparadas no PaScal Viewer.</p>
+        <p><a href="lessons/0013-tarefa13-afinidade-numa.html">Material 13</a> ·
+          <a href="lessons/0013-tarefa13-afinidade-numa.html#referencia-rapida">Referência rápida</a> ·
+          <a href="tarefa13/afinidade.slurm">Script Slurm</a> ·
+          <a href="tarefa13/relatorio.pdf">Relatório</a></p>
+      </div>
+    </section>
+
+    <section id="tarefa14">
+      <div class="source-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 14: programação em memória distribuída</h3>
+          <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+        </div>
+        <p>Troca de mensagens entre exatamente dois processos, medição com <code>MPI_Wtime</code> e gráfico de tempo em função do tamanho da mensagem.</p>
+        <p><a href="tarefa14/slides.html">Slides</a> · <a href="tarefa14/tarefa14.slurm">Script Slurm</a> · <a href="tarefa14/tarefa14.c">Código C</a> · <a href="tarefa14/relatorio.pdf">Relatório PDF</a></p>
+      </div>
+    </section>
+
+    <section id="tarefa15">
+      <div class="source-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="margin: 0; font-size: 1.2rem;">Tarefa 15: sobreposição de computação e comunicação</h3>
+          <span class="lesson-badge" style="margin: 0; background-color: var(--success-bg); color: var(--success);">Concluída</span>
+        </div>
+        <p>Difusão de calor 1D distribuída e comparação de comunicação bloqueante, não bloqueante e com <code>MPI_Test</code>.</p>
+        <p><a href="tarefa15/tarefa15.c">Código C</a> · <a href="tarefa15/tarefa15.slurm">Script Slurm</a> · <a href="tarefa15/slides.html">Slides</a> · <a href="tarefa15/relatorio.pdf">Relatório PDF</a></p>
+      </div>
+    </section>
+
+    <section id="tarefa18">
+      <div class="source-card">
+        <h3>Tarefa 18: soma de vetores entre CPU e GPU</h3>
+        <p>Comparação medida no NPAD entre oito threads da CPU e uma GPU V100, com confirmação de offload e registro dos problemas encontrados.</p>
+        <p><a href="tarefa18/vadd_cpu.c">Código CPU</a> · <a href="tarefa18/vadd_gpu.c">Código GPU</a> · <a href="tarefa18/vadd.slurm">Job Slurm</a> · <a href="tarefa18/relatorio.pdf">Relatório PDF</a></p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer-nav" style="margin-top: 4em;">
+    <span>DCA3703 &bull; UFRN</span>
+    <a href="https://github.com/EugenioVLopes/programacao-paralela" target="_blank">Repositório no GitHub &rarr;</a>
+  </footer>
+
+  <script>
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const target = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', target);
+      localStorage.setItem('theme', target);
+    }
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+  </script>
+</body>
+</html>
