@@ -23,81 +23,313 @@
         });
       }
     }
+    function toggleTheme() {
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    }
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
     document.addEventListener("DOMContentLoaded", () => applyMath());
     window.addEventListener("load", () => applyMath());
   </script>
 </head>
 <body>
   <nav class="top-nav">
-    <strong>DCA3703: Programação Paralela</strong>
-    <button class="theme-toggle-btn" onclick="toggleTheme()">Alternar tema</button>
+    <strong>DCA3703 &middot; Programação Paralela</strong>
+    <button class="theme-toggle-btn" type="button" onclick="toggleTheme()">Alternar tema</button>
   </nav>
 
-  <header>
+  <header class="hero">
+    <span class="lesson-badge">UFRN &middot; Engenharia de Computação</span>
     <h1>Programação Paralela</h1>
     <div class="metadata">
       Atividades práticas, lições e relatórios &bull; Prof. Samuel Xavier de Souza
+    </div>
+    <div class="tags">
+      <span class="tag">C / C99</span>
+      <span class="tag">OpenMP</span>
+      <span class="tag">MPI</span>
+      <span class="tag">CUDA / GPU</span>
+      <span class="tag">cache &amp; NUMA</span>
+      <span class="tag">Amdahl / Gustafson</span>
     </div>
   </header>
 
   <main>
     <section id="sobre">
       <p>
-        Materiais da disciplina DCA3703 (Programação Paralela) do curso de Engenharia de Computação da UFRN. As tarefas 01 a 13 têm lições HTML; as tarefas 14 e 15 têm slides, código C e relatório.
+        A disciplina DCA3703 estuda como medir, analisar e acelerar código numérico:
+        hierarquia de memória, leis de escalabilidade, programação com threads e,
+        por fim, memória distribuída e GPU. Cada tarefa reúne a parte teórica,
+        a análise do código C e a medição executada no cluster NPAD/UFRN.
       </p>
     </section>
 
-    <section id="tarefas">
-      <h2 style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;">Tarefas</h2>
-      <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 1.2em;">
-        <!-- Tarefas 01-20 -->
-        <div class="source-card">
-          <h3 style="margin: 0;">Lista de Tarefas</h3>
-          <p>Links para materiais e diretórios de código:</p>
-          <ul>
-            <li>Tarefa 01: <a href="lessons/tarefa01.html">Lição</a> · <a href="Tarefa_1/">Código</a></li>
-            <li>Tarefa 02: <a href="lessons/tarefa02.html">Lição</a> · <a href="Tarefa_2/">Código</a></li>
-            <li>Tarefa 03: <a href="lessons/tarefa03.html">Lição</a> · <a href="Tarefa_3/">Código</a></li>
-            <li>Tarefa 04: <a href="lessons/tarefa04.html">Lição</a> · <a href="Tarefa_4/">Código</a></li>
-            <li>Tarefa 05: <a href="lessons/tarefa05.html">Lição</a> · <a href="Tarefa_5/">Código</a></li>
-            <li>Tarefa 06: <a href="lessons/tarefa06.html">Lição</a> · <a href="Tarefa_6/">Código</a></li>
-            <li>Tarefa 07: <a href="lessons/tarefa07.html">Lição</a> · <a href="Tarefa_7/">Código</a></li>
-            <li>Tarefa 08: <a href="lessons/tarefa08.html">Lição</a> · <a href="Tarefa_8/">Código</a></li>
-            <li>Tarefa 09: <a href="lessons/tarefa09.html">Lição</a> · <a href="Tarefa_9/">Código</a></li>
-            <li>Tarefa 10: <a href="lessons/tarefa10.html">Lição</a> · <a href="Tarefa_10/">Código</a></li>
-            <li>Tarefa 11: <a href="lessons/tarefa11.html">Lição</a> · <a href="Tarefa_11/">Código</a></li>
-            <li>Tarefa 12: <a href="lessons/tarefa12.html">Lição</a> · <a href="Tarefa_12/">Código</a></li>
-            <li>Tarefa 13: <a href="lessons/tarefa13.html">Lição</a> · <a href="Tarefa_13/">Código</a></li>
-            <li>Tarefa 14: <a href="lessons/tarefa14.html">Lição</a> · <a href="Tarefa_14/">Código</a></li>
-            <li>Tarefa 15: <a href="lessons/tarefa15.html">Lição</a> · <a href="Tarefa_15/">Código</a></li>
-            <li>Tarefa 16: <a href="lessons/tarefa16.html">Lição</a> · <a href="Tarefa_16/">Código</a></li>
-            <li>Tarefa 17: <a href="lessons/tarefa17.html">Lição</a> · <a href="Tarefa_17/">Código</a></li>
-            <li>Tarefa 18: <a href="lessons/tarefa18.html">Lição</a> · <a href="Tarefa_18/">Código</a></li>
-            <li>Tarefa 19: <a href="Tarefa_19/">Código</a></li>
-            <li>Tarefa 20: <a href="Tarefa_20/">Código</a></li>
-          </ul>
-        </div>
+    <!-- Módulo 1 -->
+    <section id="modulo-fundamentos" class="modulo">
+      <h2>1. Fundamentos de arquitetura e desempenho</h2>
+      <div class="task-grid">
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 01</span>
+          <h3>Leibniz, poder computacional e limites sequenciais</h3>
+          <p>Poder computacional, limites físicos do processador sequencial e a aproximação de $\pi$ pela série de Leibniz.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa01.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_1" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 02</span>
+          <h3>Multiplicação matriz-vetor e cache</h3>
+          <p>Hierarquia de memória (L1/L2/L3), localidade espacial e temporal, linhas de 64 bytes e acesso row-major vs. column-major.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa02.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_2" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 03</span>
+          <h3>Paralelismo ao nível de instrução (ILP)</h3>
+          <p>Execução superescalar, quebra da cadeia RAW com múltiplos acumuladores e efeito das flags <code>-O0</code>, <code>-O2</code> e <code>-O3</code>.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa03.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_3" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 04</span>
+          <h3>Aplicações limitadas por memória e por CPU</h3>
+          <p>Gargalo de von Neumann, intensidade aritmética e o impacto do multithreading em cada tipo de carga.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa04.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_4" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 05</span>
+          <h3>Contagem de primos e condições de corrida</h3>
+          <p>Paralelismo de laços com OpenMP, observação de <em>race conditions</em> e desbalanceamento de carga.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa05.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_5" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
       </div>
     </section>
 
+    <!-- Módulo 2 -->
+    <section id="modulo-openmp" class="modulo">
+      <h2>2. Programação paralela com OpenMP</h2>
+      <div class="task-grid">
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 06</span>
+          <h3>Estimativa de $\pi$ (Monte Carlo) e cláusulas OpenMP</h3>
+          <p>Método de Monte Carlo, <code>critical</code> vs. acumuladores locais e escopo de dados (<code>shared</code>, <code>private</code>, <code>firstprivate</code>, <code>lastprivate</code>, <code>default(none)</code>).</p>
+          <div class="task-links">
+            <a href="lessons/tarefa06.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_6" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 07</span>
+          <h3>Lista encadeada, tasks e single</h3>
+          <p>Percorrimento de lista com <code>task</code>, <code>single</code>, <code>taskwait</code> e <em>work-stealing</em>.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa07.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_7" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 08</span>
+          <h3>&pi; estocástico, <code>rand</code>/<code>rand_r</code> e false sharing</h3>
+          <p>Redução com <code>critical</code> vs. vetor <code>hits[tid]</code>, protocolo MESI e <em>padding</em> de 64 bytes.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa08.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_8" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 09</span>
+          <h3>Listas, <code>critical</code> nomeado e <em>locks</em></h3>
+          <p>Tasks com <code>rand_r()</code>, <code>critical(lista0)</code> vs. <code>critical(lista1)</code> e vetor <code>locks[N]</code> com <code>init/set/unset/destroy</code>.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa09.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_9" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 10</span>
+          <h3><code>atomic</code>, <code>critical</code> e <code>reduction</code></h3>
+          <p>Comparativo entre shared + <code>critical</code>, <code>atomic</code>, privado + <code>critical</code>, vetor e <code>reduction</code> com <code>rand_r</code>.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa10.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_10" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 11</span>
+          <h3>Particionamento de dados e balanceamento de carga</h3>
+          <p>Difusão 2D validada e sete variantes de <code>schedule</code> medidas de 1 a 28 threads.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa11.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_11" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- Módulo 3 -->
+    <section id="modulo-escalabilidade" class="modulo">
+      <h2>3. Escalabilidade e memória NUMA</h2>
+      <div class="task-grid">
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 12</span>
+          <h3>Escalabilidade no NPAD e PaScal Viewer</h3>
+          <p>Quatro versões da difusão viscosa, escalabilidade forte e fraca e coleta de dados no cluster.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa12.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_12" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 13</span>
+          <h3>Afinidade de threads e NUMA</h3>
+          <p>Configurações de <code>OMP_PROC_BIND</code> e <code>OMP_PLACES</code> comparadas com o mesmo código.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa13.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_13" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- Módulo 4 -->
+    <section id="modulo-mpi" class="modulo">
+      <h2>4. Programação distribuída com MPI</h2>
+      <div class="task-grid">
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 14</span>
+          <h3>Programação em memória distribuída</h3>
+          <p>Troca de mensagens entre exatamente dois processos, medição com <code>MPI_Wtime</code> e latência por tamanho de mensagem.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa14.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_14" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 15</span>
+          <h3>Sobreposição de computação e comunicação</h3>
+          <p>Difusão de calor 1D distribuída: comunicação bloqueante, não bloqueante e com <code>MPI_Test</code>.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa15.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_15" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 16</span>
+          <h3>Multiplicação matriz-vetor com MPI</h3>
+          <p>Decomposição de domínio e troca de halos para a multiplicação matriz-vetor distribuída.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa16.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_16" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- Módulo 5 -->
+    <section id="modulo-gpu" class="modulo">
+      <h2>5. Computação em GPU</h2>
+      <div class="task-grid">
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 17</span>
+          <h3>Multiplicação matriz-vetor em GPU</h3>
+          <p>Paralelização em CUDA, coalescência de memória e modelo SIMT.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa17.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_17" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill">Concluída</span>
+          <span class="task-card-num">Tarefa 18</span>
+          <h3>Soma de vetores entre CPU e GPU</h3>
+          <p>Comparação medida no NPAD entre oito threads da CPU e uma GPU V100, com confirmação de <em>offload</em>.</p>
+          <div class="task-links">
+            <a href="lessons/tarefa18.html">Lição</a>
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_18" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill pending">Em andamento</span>
+          <span class="task-card-num">Tarefa 19</span>
+          <h3>Difusão de calor em GPU</h3>
+          <p>Implementações do kernel de calor e perfilamento com <code>nsys</code>.</p>
+          <div class="task-links">
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_19" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+        <article class="task-card">
+          <span class="status-pill pending">Em andamento</span>
+          <span class="task-card-num">Tarefa 20</span>
+          <h3>Otimização do kernel de calor</h3>
+          <p>Versões sucessivas do kernel de difusão de calor e análise das limitações de memória.</p>
+          <div class="task-links">
+            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_20" target="_blank" rel="noopener">Código</a>
+          </div>
+        </article>
+
+      </div>
+    </section>
   </main>
 
-  <footer class="footer-nav" style="margin-top: 4em;">
-    <span>DCA3703 &bull; UFRN</span>
-    <a href="https://github.com/EugenioVLopes/programacao-paralela" target="_blank">Repositório no GitHub &rarr;</a>
+  <footer class="footer-nav">
+    <span>DCA3703 &bull; UFRN &bull; Prof. Samuel Xavier de Souza</span>
+    <a href="https://github.com/JoseFelixeng/Programacao_Paralela" target="_blank" rel="noopener">Repositório no GitHub &rarr;</a>
   </footer>
-
-  <script>
-    function toggleTheme() {
-      const current = document.documentElement.getAttribute('data-theme');
-      const target = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', target);
-      localStorage.setItem('theme', target);
-    }
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    }
-  </script>
 </body>
 </html>
