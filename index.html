@@ -9,6 +9,313 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  <style>
+    /* ============================================================
+       Animações e aprimoramentos visuais da página inicial
+       ============================================================ */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulseRing {
+      0%   { box-shadow: 0 0 0 0 var(--accent); }
+      70%  { box-shadow: 0 0 0 10px rgba(11, 99, 206, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(11, 99, 206, 0); }
+    }
+    @keyframes float {
+      0%   { transform: translateY(0); }
+      50%  { transform: translateY(-8px); }
+      100% { transform: translateY(0); }
+    }
+
+    .hero {
+      animation: fadeIn 0.8s ease-out both;
+    }
+    .hero h1 {
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      animation: fadeIn 0.6s ease-out both;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow);
+    }
+    .stat-card .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      display: block;
+    }
+    .stat-card .stat-label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+
+    .modulo {
+      animation: fadeIn 0.5s ease-out both;
+    }
+    .modulo:nth-child(2) { animation-delay: 0.1s; }
+    .modulo:nth-child(3) { animation-delay: 0.2s; }
+    .modulo:nth-child(4) { animation-delay: 0.3s; }
+    .modulo:nth-child(5) { animation-delay: 0.4s; }
+
+    .task-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      background: var(--card-bg);
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      animation: fadeIn 0.5s ease-out both;
+      opacity: 0;
+    }
+    .task-card.visible { opacity: 1; }
+    .task-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow);
+      border-color: var(--accent);
+    }
+    .task-card .status-pill {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .status-pill.Concluída {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+    .status-pill.Em.andamento,
+    .status-pill.pending {
+      background: var(--warning-bg);
+      color: var(--warning);
+    }
+
+    .task-card-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    .task-card h3 {
+      margin: 0 0 0.6rem 0;
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+    .task-card p {
+      margin: 0 0 0.9rem 0;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .task-links {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 0.4rem;
+    }
+    .task-links a {
+      font-size: 0.85rem;
+      padding: 0.35rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .task-links a:hover {
+      background: var(--accent-light);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .resultado-destaque {
+      background: var(--accent-light);
+      border-left: 4px solid var(--accent);
+      border-radius: 0 12px 12px 0;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      animation: fadeIn 0.6s ease-out both;
+    }
+    .resultado-destaque h4 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+      color: var(--text);
+    }
+    .resultado-destaque p {
+      margin: 0;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+    }
+
+    .caso-estudo {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      animation: fadeIn 0.6s ease-out both;
+    }
+    .caso-estudo h4 {
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    .chip {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: var(--code-bg);
+      color: var(--text-muted);
+      margin-right: 0.4rem;
+      margin-bottom: 0.4rem;
+      border: 1px solid var(--border);
+    }
+
+    nav.top-nav {
+      position: sticky;
+      top: 0;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(6px);
+      z-index: 50;
+      border-bottom: 1px solid var(--border);
+    }
+    [data-theme="dark"] nav.top-nav {
+      background: rgba(10, 17, 32, 0.85);
+    }
+
+    .badge-new {
+      display: inline-block;
+      font-size: 0.7rem;
+      background: var(--error);
+      color: #fff;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      margin-left: 0.4rem;
+      animation: pulseRing 2s infinite;
+    }
+
+    /* Quiz / perguntas */
+    .quiz-section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-top: 3rem;
+      animation: fadeIn 0.8s ease-out both;
+    }
+    .quiz-section h2 {
+      margin-top: 0;
+      color: var(--accent);
+    }
+    .quiz-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      background: var(--surface);
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      animation: fadeIn 0.5s ease-out both;
+      opacity: 0;
+    }
+    .quiz-card.visible { opacity: 1; }
+    .quiz-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-sm);
+      border-color: var(--accent-2);
+    }
+    .quiz-card h4 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+      color: var(--text);
+    }
+    .quiz-card p {
+      margin: 0 0 1rem 0;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+    }
+    .quiz-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.5rem;
+    }
+    .quiz-option {
+      display: block;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--code-bg);
+      color: var(--text);
+      text-decoration: none;
+      text-align: center;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quiz-option:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+    .quiz-option.correct {
+      border-color: var(--success);
+      background: var(--success-bg);
+      color: var(--success);
+    }
+    .quiz-option.wrong {
+      border-color: var(--error);
+      background: var(--error-bg);
+      color: var(--error);
+    }
+    .quiz-feedback {
+      margin-top: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      display: none;
+    }
+    .quiz-feedback.show { display: block; }
+    .quiz-feedback.correct { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+    .quiz-feedback.wrong { background: var(--error-bg); color: var(--error); border: 1px solid var(--error); }
+    .reveal-btn {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .reveal-btn:hover {
+      background: var(--accent-light);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+  </style>
   <script>
     function applyMath(el = document.body) {
       if (window.renderMathInElement) {
@@ -34,6 +341,32 @@
     }
     document.addEventListener("DOMContentLoaded", () => applyMath());
     window.addEventListener("load", () => applyMath());
+    document.addEventListener("DOMContentLoaded", () => {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.task-card, .quiz-card').forEach(card => observer.observe(card));
+    });
+
+    function resposta(el, correto) {
+      document.querySelectorAll('.quiz-option').forEach(o => o.style.pointerEvents = 'none');
+      if (correto) {
+        el.classList.add('correct');
+      } else {
+        el.classList.add('wrong');
+      }
+    }
+    function mostrar(idErrada, idCerta) {
+      const fErrada = document.getElementById(idErrada);
+      const fCerta = document.getElementById(idCerta);
+      if (fErrada) fErrada.classList.add('show');
+      if (fCerta) fCerta.classList.add('show');
+    }
   </script>
 </head>
 <body>
@@ -46,7 +379,7 @@
     <span class="lesson-badge">UFRN &middot; Engenharia de Computação</span>
     <h1>Programação Paralela</h1>
     <div class="metadata">
-      Atividades práticas, lições e relatórios &bull; Prof. Samuel Xavier de Souza
+      Implementação, medição e defesa de 20 atividades práticas &bull; Prof. Samuel Xavier de Souza &bull; Aluno: José Felix Rodrigues Anselmo
     </div>
     <div class="tags">
       <span class="tag">C / C99</span>
@@ -61,11 +394,28 @@
   <main>
     <section id="sobre">
       <p>
-        A disciplina DCA3703 estuda como medir, analisar e acelerar código numérico:
-        hierarquia de memória, leis de escalabilidade, programação com threads e,
-        por fim, memória distribuída e GPU. Cada tarefa reúne a parte teórica,
-        a análise do código C e a medição executada no cluster NPAD/UFRN.
+        A disciplina <strong>DCA3703</strong> estuda como medir, analisar e acelerar código numérico:
+        hierarquia de memória, leis de escalabilidade, programação com threads, memória distribuída e GPU.
+        Cada tarefa reúne a parte teórica, a análise do código C e a medição executada no cluster NPAD/UFRN.
       </p>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-number">20</span>
+          <span class="stat-label">tarefas práticas</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">5</span>
+          <span class="stat-label">módulos temáticos</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">3</span>
+          <span class="stat-label">modelos de paralelismo</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">1</span>
+          <span class="stat-label">cluster NPAD</span>
+        </div>
+      </div>
     </section>
 
     <!-- Módulo 1 -->
@@ -76,11 +426,15 @@
         <article class="task-card">
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 01</span>
-          <h3>Leibniz, poder computacional e limites sequenciais</h3>
-          <p>Poder computacional, limites físicos do processador sequencial e a aproximação de $\pi$ pela série de Leibniz.</p>
+          <h3>Série de Leibniz e limites sequenciais</h3>
+          <p>Aproximação de $\pi$ pela série de Leibniz em ponto flutuante <code>double</code>. Estudo do erro de truncamento, convergência e custo de precisão em execução sequencial.</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p>Convergência lenta ($\mathcal{O}(1/N)$) demonstra o limite do poder computacional sequencial para problemas de alta precisão.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa01.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_1" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_1/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa01.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -88,21 +442,29 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 02</span>
           <h3>Multiplicação matriz-vetor e cache</h3>
-          <p>Hierarquia de memória (L1/L2/L3), localidade espacial e temporal, linhas de 64 bytes e acesso row-major vs. column-major.</p>
+          <p>Hierarquia de memória (L1/L2/L3), localidade espacial e temporal, linhas de 64 bytes. Comparação de acesso contíguo (row-major) vs. acesso por colunas (column-major) e impacto de cache misses.</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p>Acesso row-major explora a linha de cache de 64 bytes; acesso column-major gera cache misses e degrada o desempenho drasticamente.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa02.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_2" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_2/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa02.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
         <article class="task-card">
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 03</span>
-          <h3>Paralelismo ao nível de instrução (ILP)</h3>
-          <p>Execução superescalar, quebra da cadeia RAW com múltiplos acumuladores e efeito das flags <code>-O0</code>, <code>-O2</code> e <code>-O3</code>.</p>
+          <h3>Paralelismo em nível de instrução (ILP)</h3>
+          <p>Execução superescalar, quebra da cadeia de dependências RAW com múltiplos acumuladores e efeito das flags de otimização <code>-O0</code>, <code>-O2</code> e <code>-O3</code>.</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p>Múltiplos acumuladores quebram dependências RAW e permitem ILP; otimização do compilador amplifica o ganho.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa03.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_3" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_3/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa03.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -110,10 +472,14 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 04</span>
           <h3>Aplicações limitadas por memória e por CPU</h3>
-          <p>Gargalo de von Neumann, intensidade aritmética e o impacto do multithreading em cada tipo de carga.</p>
+          <p>Gargalo de von Neumann, intensidade aritmética e comparação entre laços limitados por largura de banda de memória e laços limitados por computação, com OpenMP e SMT.</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p>Kernels memory-bound não escalam com mais threads além da saturação da largura de banda; compute-bound sim.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa04.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_4" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_4/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa04.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -121,10 +487,14 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 05</span>
           <h3>Contagem de primos e condições de corrida</h3>
-          <p>Paralelismo de laços com OpenMP, observação de <em>race conditions</em> e desbalanceamento de carga.</p>
+          <p>Paralelismo de laços com OpenMP, observação de <em>race conditions</em> e diagnóstico de desbalanceamento de carga entre threads.</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p>Sem proteção, threads escrevem concorrentemente no mesmo contador; o desbalanceamento aparece quando primos se concentram em partes específicas do intervalo.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa05.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_5" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_5/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa05.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -140,10 +510,14 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 06</span>
           <h3>Estimativa de $\pi$ (Monte Carlo) e cláusulas OpenMP</h3>
-          <p>Método de Monte Carlo, <code>critical</code> vs. acumuladores locais e escopo de dados (<code>shared</code>, <code>private</code>, <code>firstprivate</code>, <code>lastprivate</code>, <code>default(none)</code>).</p>
+          <p>Método de Monte Carlo para $\pi$, uso de <code>critical</code> vs. acumuladores locais e escopo de dados: <code>shared</code>, <code>private</code>, <code>firstprivate</code>, <code>lastprivate</code>, <code>default(none)</code>.</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p><code>default(none)</code> força declaração explícita de escopo, evitando variáveis compartilhadas acidentais que causam condições de corrida.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa06.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_6" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_6/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa06.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -151,10 +525,14 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 07</span>
           <h3>Lista encadeada, tasks e single</h3>
-          <p>Percorrimento de lista com <code>task</code>, <code>single</code>, <code>taskwait</code> e <em>work-stealing</em>.</p>
+          <p>Percorrimento de lista encadeada com <code>#pragma omp task</code>, <code>single</code>, <code>taskwait</code> e o mecanismo de <em>work-stealing</em> do OpenMP.</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p>Tasks permitem paralelismo irregular; <code>taskwait</code> sincroniza apenas as tasks geradas na região atual.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa07.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_7" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_7/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa07.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -162,10 +540,14 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 08</span>
           <h3>&pi; estocástico, <code>rand</code>/<code>rand_r</code> e false sharing</h3>
-          <p>Redução com <code>critical</code> vs. vetor <code>hits[tid]</code>, protocolo MESI e <em>padding</em> de 64 bytes.</p>
+          <p>Redução com <code>critical</code> vs. vetor <code>hits[tid]</code>, protocolo de coerência MESI e <em>padding</em> de 64 bytes para eliminar false sharing entre threads.</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p>Variáveis de threads diferentes na mesma linha de 64 bytes causam false sharing; padding isola cada contador em sua própria linha de cache.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa08.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_8" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_8/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa08.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -173,10 +555,14 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 09</span>
           <h3>Listas, <code>critical</code> nomeado e <em>locks</em></h3>
-          <p>Tasks com <code>rand_r()</code>, <code>critical(lista0)</code> vs. <code>critical(lista1)</code> e vetor <code>locks[N]</code> com <code>init/set/unset/destroy</code>.</p>
+          <p>Tasks com <code>rand_r()</code>, regiões <code>critical(lista0)</code> vs. <code>critical(lista1)</code> e vetor <code>locks[N]</code> com <code>init/set/unset/destroy</code> para proteger $N$ listas encadeadas.</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p>Critical nomeado particiona a contenção por recurso; <code>omp_lock_t</code> oferece controle fino de exclusão mútua por lista.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa09.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_9" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_9/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa09.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -184,10 +570,14 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 10</span>
           <h3><code>atomic</code>, <code>critical</code> e <code>reduction</code></h3>
-          <p>Comparativo entre shared + <code>critical</code>, <code>atomic</code>, privado + <code>critical</code>, vetor e <code>reduction</code> com <code>rand_r</code>.</p>
+          <p>Comparativo de overhead entre <code>shared</code> + <code>critical</code>, <code>atomic</code>, privado + <code>critical</code>, vetor de contadores e <code>reduction</code> com <code>rand_r</code>.</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p><code>reduction</code> é o mecanismo mais eficiente para acumulação; <code>atomic</code> é leve para escalares simples; <code>critical</code> tem maior serialização.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa10.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_10" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_10/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa10.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -195,10 +585,15 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 11</span>
           <h3>Particionamento de dados e balanceamento de carga</h3>
-          <p>Difusão 2D validada e sete variantes de <code>schedule</code> medidas de 1 a 28 threads.</p>
+          <p>Difusão viscosa 3D (termo viscoso de Navier–Stokes) por diferenças finitas. Validação sequencial com perturbação gaussiana e 11 variantes paralelas com <code>schedule</code> e <code>collapse</code>.</p>
+          <div class="caso-estudo">
+            <h4>Estudo de caso &mdash; Difusão viscosa 3D</h4>
+            <p>Malha $64\times64\times64$, 200 passos, $\nu=0,01$. Tempo sequencial de referência: <strong>1,009 s</strong>. A soma de $u$ foi idêntica (212,6596807633) em todas as execuções, provando que a paralelização não alterou o resultado numérico.</p>
+            <p>Melhor speedup: <strong>4,20×</strong> com <code>dynamic,2</code> em 8 threads (eficiência 52%). <code>collapse(2)</code> obteve speedup ~2× com 2 threads (~100% de eficiência). O <code>static</code> com chunk grande se destacou em malha uniforme.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa11.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_11" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_11/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa11.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -214,10 +609,14 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 12</span>
           <h3>Escalabilidade no NPAD e PaScal Viewer</h3>
-          <p>Quatro versões da difusão viscosa, escalabilidade forte e fraca e coleta de dados no cluster.</p>
+          <p>Quatro versões do solver de difusão viscosa em nó exclusivo do NPAD (32 núcleos). Medição de escalabilidade forte e fraca com o PaScal Analyzer/Viewers, coleta de 5 repetições por combinação.</p>
+          <div class="caso-estudo">
+            <h4>Estudo de caso &mdash; Lei de Amdahl na prática</h4>
+            <p>Compilar com <code>-O3 -march=native</code> acelerou a parte paralela, mas <strong>reduziu o teto de speedup</strong> de ~12× para ~2×: a fração serial fixa (soma final, gravação de CSV, criação de threads a cada passo) passou a dominar. É Amdahl: otimizar só a parte paralela diminui o speedup máximo.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa12.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_12" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_12/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa12.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -225,10 +624,14 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 13</span>
           <h3>Afinidade de threads e NUMA</h3>
-          <p>Configurações de <code>OMP_PROC_BIND</code> e <code>OMP_PLACES</code> comparadas com o mesmo código.</p>
+          <p>Reavaliação do solver de Navier–Stokes variando <code>OMP_PROC_BIND</code> (<code>close</code>, <code>spread</code>) e <code>OMP_PLACES</code> (<code>cores</code>, listas explícitas) no mesmo nó NPAD.</p>
+          <div class="caso-estudo">
+            <h4>Estudo de caso &mdash; Kernel memory-bound</h4>
+            <p>Speedup máximo ~14× (sobre ideal de 32×) em todos os testes de afinidade. O gargalo é a largura de banda de memória, não a colocação das threads: o estêncil FTCS de 7 pontos tem baixa intensidade aritmética por byte acessado. <code>close</code> e <code>spread</code> saturar a mesma banda agregada; apenas uma anomalia menor com 2 threads e grupos NUMA fixos apareceu.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa13.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_13" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_13/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa13.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -244,10 +647,14 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 14</span>
           <h3>Programação em memória distribuída</h3>
-          <p>Troca de mensagens entre exatamente dois processos, medição com <code>MPI_Wtime</code> e latência por tamanho de mensagem.</p>
+          <p>Troca de mensagens entre exatamente dois processos com MPI, medição de tempo com <code>MPI_Wtime</code> e latência por tamanho de mensagem.</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p>Latência cresce com o tamanho da mensagem; mensagens pequenas são dominadas pelo overhead de software da rede.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa14.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_14" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_14/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa14.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -255,10 +662,14 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 15</span>
           <h3>Sobreposição de computação e comunicação</h3>
-          <p>Difusão de calor 1D distribuída: comunicação bloqueante, não bloqueante e com <code>MPI_Test</code>.</p>
+          <p>Difusão de calor 1D distribuída: comparação entre comunicação bloqueante, não bloqueante e com <code>MPI_Test</code> para sobrepor cálculo e troca de mensagens.</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p>Comunicação não bloqueante com <code>MPI_Test</code> permite executar cálculo local enquanto a rede transfere dados, ocultando parte da latência.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa15.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_15" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_15/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa15.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -266,10 +677,14 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 16</span>
           <h3>Multiplicação matriz-vetor com MPI</h3>
-          <p>Decomposição de domínio e troca de halos para a multiplicação matriz-vetor distribuída.</p>
+          <p>Decomposição de domínio e troca de halos (células fantasma) para a multiplicação matriz-vetor distribuída entre processos.</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p>A troca de halos é o custo de comunicação fixo por iteração; aumentar o tamanho local do domínio reduz o impacto relativo dessa troca.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa16.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_16" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_16/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa16.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -285,10 +700,14 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 17</span>
           <h3>Multiplicação matriz-vetor em GPU</h3>
-          <p>Paralelização em CUDA, coalescência de memória e modelo SIMT.</p>
+          <p>Paralelização em CUDA, coalescência de acessos à memória global e modelo de execução SIMT (Single Instruction, Multiple Threads).</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p>Acesso coalescido à memória global é essencial para aproveitar a largura de banda da GPU; acessos espalhados degradam o desempenho da mesma forma que cache misses na CPU.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa17.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_17" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_17/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa17.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -296,10 +715,14 @@
           <span class="status-pill">Concluída</span>
           <span class="task-card-num">Tarefa 18</span>
           <h3>Soma de vetores entre CPU e GPU</h3>
-          <p>Comparação medida no NPAD entre oito threads da CPU e uma GPU V100, com confirmação de <em>offload</em>.</p>
+          <p>Comparação medida no NPAD entre oito threads de CPU e uma GPU V100, com confirmação de <em>offload</em> do cálculo para o dispositivo.</p>
+          <div class="resultado-destaque">
+            <h4>Resultado chave</h4>
+            <p>Para vetores pequenos, o custo de cópia CPU&rarr;GPU domina e a CPU vence; para vetores grandes, a largura de banda e paralelismo massivo da GPU superam.</p>
+          </div>
           <div class="task-links">
-            <a href="lessons/tarefa18.html">Lição</a>
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_18" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_18/" target="_blank" rel="noopener">Código</a>
+            <a href="https://josefelixeng.github.io/Programacao_Paralela/lessons/tarefa18.html" target="_blank" rel="noopener">Lição <span class="badge-new">em breve</span></a>
           </div>
         </article>
 
@@ -307,9 +730,9 @@
           <span class="status-pill pending">Em andamento</span>
           <span class="task-card-num">Tarefa 19</span>
           <h3>Difusão de calor em GPU</h3>
-          <p>Implementações do kernel de calor e perfilamento com <code>nsys</code>.</p>
+          <p>Implementações do kernel de calor e perfilamento com <code>nsys</code> para identificar gargalos de memória e ocupação.</p>
           <div class="task-links">
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_19" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_19/" target="_blank" rel="noopener">Código</a>
           </div>
         </article>
 
@@ -317,15 +740,221 @@
           <span class="status-pill pending">Em andamento</span>
           <span class="task-card-num">Tarefa 20</span>
           <h3>Otimização do kernel de calor</h3>
-          <p>Versões sucessivas do kernel de difusão de calor e análise das limitações de memória.</p>
+          <p>Versões sucessivas do kernel de difusão de calor e análise das limitações de memória e ocupação dos SMs da GPU.</p>
           <div class="task-links">
-            <a href="https://github.com/JoseFelixeng/Programacao_Paralela/tree/main/Tarefa_20" target="_blank" rel="noopener">Código</a>
+            <a href="Tarefa_20/" target="_blank" rel="noopener">Código</a>
           </div>
         </article>
 
       </div>
     </section>
-  </main>
+
+    <section id="estudos-casos" style="margin-top: 3rem;">
+      <h2>Estudos de caso destacados</h2>
+      <div class="task-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+        <div class="caso-estudo">
+          <h4>Tarefa 11 &mdash; Balanceamento de carga</h4>
+          <p><code>collapse(2)</code> funde laços aninhados e cria mais fatias de trabalho, melhorando o balanceamento em malha uniforme. Em malha irregular, <code>dynamic</code> com chunk pequeno adapta melhor o custo variável por iteração.</p>
+        </div>
+        <div class="caso-estudo">
+          <h4>Tarefa 12 &mdash; Amdahl vs Gustafson</h4>
+          <p>Problema fixo (escalabilidade forte) tem teto imposto pela fração serial. Se o problema cresce com os recursos (escala fraca), a eficiência pode se manter alta mesmo com mais núcleos.</p>
+        </div>
+        <div class="caso-estudo">
+          <h4>Tarefa 13 &mdash; Afinidade NUMA</h4>
+          <p>Em kernels memory-bound, <code>OMP_PROC_BIND</code> e <code>OMP_PLACES</code> pouco afetam o desempenho porque o gargalo é a largura de banda de memória agregada, não a localidade da thread.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="quiz-tarefas" class="quiz-section">
+      <h2>&#128165; Perguntas sobre as Tarefas 11 a 20</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        Teste seus conhecimentos sobre código, implementações e conceitos das tarefas avançadas.
+        Clique em uma opção para ver a resposta.
+      </p>
+
+      <article class="quiz-card">
+        <h4>Tarefa 11 &mdash; Qual cláusula OpenMP funde laços aninhados?</h4>
+        <p>Na difusão viscosa 3D, qual diretiva permite tratar dois ou mais laços aninhados como um único espaço de iterações?</p>
+        <div class="quiz-options">
+          <span class="quiz-option" onclick="resposta(this, false)">schedule(dynamic)</span>
+          <span class="quiz-option" onclick="resposta(this, true)">collapse(n)</span>
+          <span class="quiz-option" onclick="resposta(this, false)">reduction(+:var)</span>
+          <span class="quiz-option" onclick="resposta(this, false)">atomic</span>
+        </div>
+        <div class="quiz-feedback wrong" id="fb11a">
+          &#10060; schedule controla a distribuição de iterações, não funde laços.
+        </div>
+        <div class="quiz-feedback correct" id="fb11b">
+          &#10004; Correto! collapse(n) combina laços aninhados em um único espaço de iterações, gerando mais fatias para balancear a carga.
+        </div>
+        <button class="reveal-btn" onclick="mostrar('fb11a','fb11b')">Mostrar resposta</button>
+      </article>
+
+      <article class="quiz-card">
+        <h4>Tarefa 12 &mdash; O que é escalabilidade forte?</h4>
+        <p>Na Tarefa 12, com tamanho do problema fixo e número de núcleos crescendo, o que medimos?</p>
+        <div class="quiz-options">
+          <span class="quiz-option" onclick="resposta(this, true)">Speedup = T(1) / T(p)</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Eficiência de Gustafson</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Tempo de comunicação MPI</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Largura de banda de memória</span>
+        </div>
+        <div class="quiz-feedback wrong" id="fb12a">
+          &#10060; Gustafson assume problema crescendo com os recursos (escala fraca).
+        </div>
+        <div class="quiz-feedback correct" id="fb12b">
+          &#10004; Correto! Escalabilidade forte mede speedup com problema fixo conforme núcleos aumentam (Lei de Amdahl).
+        </div>
+        <button class="reveal-btn" onclick="mostrar('fb12a','fb12b')">Mostrar resposta</button>
+      </article>
+
+      <article class="quiz-card">
+        <h4>Tarefa 13 &mdash; Por que afinidade pouco afeta kernels memory-bound?</h4>
+        <p>No NPAD, close e spread tiveram resultados praticamente idênticos. Qual é o motivo principal?</p>
+        <div class="quiz-options">
+          <span class="quiz-option" onclick="resposta(this, false)">NUMA desabilitada no nó</span>
+          <span class="quiz-option" onclick="resposta(this, true)">Gargalo é largura de banda de memória agregada</span>
+          <span class="quiz-option" onclick="resposta(this, false)">OpenMP não suporta afinidade</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Threads rodam na mesma CPU</span>
+        </div>
+        <div class="quiz-feedback wrong" id="fb13a">
+          &#10060; O nó tem NUMA ativa; o ponto é que o estêncil consome mais memória que computação.
+        </div>
+        <div class="quiz-feedback correct" id="fb13b">
+          &#10004; Correto! O kernel é memory-bound: o estêncil FTCS de 7 pontos satura a banda de memória, independente de onde a thread fica alocada.
+        </div>
+        <button class="reveal-btn" onclick="mostrar('fb13a','fb13b')">Mostrar resposta</button>
+      </article>
+
+      <article class="quiz-card">
+        <h4>Tarefa 14 &mdash; Qual função mede tempo em MPI?</h4>
+        <p>Na troca de mensagens entre dois processos, qual função da MPI é usada para medição de latência?</p>
+        <div class="quiz-options">
+          <span class="quiz-option" onclick="resposta(this, false)">clock_gettime()</span>
+          <span class="quiz-option" onclick="resposta(this, true)">MPI_Wtime()</span>
+          <span class="quiz-option" onclick="resposta(this, false)">omp_get_wtime()</span>
+          <span class="quiz-option" onclick="resposta(this, false)">gettimeofday()</span>
+        </div>
+        <div class="quiz-feedback wrong" id="fb14a">
+          &#10060; clock_gettime é POSIX/C, não MPI.
+        </div>
+        <div class="quiz-feedback correct" id="fb14b">
+          &#10004; Correto! MPI_Wtime() retorna o tempo decorrido de forma portável em processos MPI.
+        </div>
+        <button class="reveal-btn" onclick="mostrar('fb14a','fb14b')">Mostrar resposta</button>
+      </article>
+
+      <article class="quiz-card">
+        <h4>Tarefa 15 &mdash; O que MPI_Test permite?</h4>
+        <p>Na difusão de calor 1D distribuída, para que serve MPI_Test na sobreposição de computação e comunicação?</p>
+        <div class="quiz-options">
+          <span class="quiz-option" onclick="resposta(this, false)">Encerra o programa MPI</span>
+          <span class="quiz-option" onclick="resposta(this, true)">Verifica se comunicação não bloqueante terminou</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Bloqueia até todas mensagens chegarem</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Soma vetores distribuídos</span>
+        </div>
+        <div class="quiz-feedback wrong" id="fb15a">
+          &#10060; MPI_Test não encerra o programa.
+        </div>
+        <div class="quiz-feedback correct" id="fb15b">
+          &#10004; Correto! MPI_Test verifica conclusão de uma comunicação não bloqueante sem bloquear, permitindo cálculo enquanto a rede transfere dados.
+        </div>
+        <button class="reveal-btn" onclick="mostrar('fb15a','fb15b')">Mostrar resposta</button>
+      </article>
+
+      <article class="quiz-card">
+        <h4>Tarefa 16 &mdash; O que são halos em MPI?</h4>
+        <p>Na multiplicação matriz-vetor distribuída, o que representa a troca de halos (células fantasma)?</p>
+        <div class="quiz-options">
+          <span class="quiz-option" onclick="resposta(this, false)">Dados duplicados para redundância</span>
+          <span class="quiz-option" onclick="resposta(this, true)">Regiões de fronteira entre domínios de processos</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Buffer de rede do MPI</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Resultado final da multiplicação</span>
+        </div>
+        <div class="quiz-feedback wrong" id="fb16a">
+          &#10060; Não são dados duplicados para redundância.
+        </div>
+        <div class="quiz-feedback correct" id="fb16b">
+          &#10004; Correto! Halos são cópias das regiões de fronteira de domínios vizinhos, necessárias para calcular células na borda de cada processo.
+        </div>
+        <button class="reveal-btn" onclick="mostrar('fb16a','fb16b')">Mostrar resposta</button>
+      </article>
+
+      <article class="quiz-card">
+        <h4>Tarefa 17 &mdash; O que é coalescência na GPU?</h4>
+        <p>No kernel CUDA de multiplicação matriz-vetor, por que acessos coalescidos à memória global importam?</p>
+        <div class="quiz-options">
+          <span class="quiz-option" onclick="resposta(this, false)">Reduzem o número de threads</span>
+          <span class="quiz-option" onclick="resposta(this, true)">Aproveitam a largura de banda da memória global</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Eliminam a necessidade de Shared Memory</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Aumentam o número de SMs</span>
+        </div>
+        <div class="quiz-feedback wrong" id="fb17a">
+          &#10060; Coalescência não muda o número de threads.
+        </div>
+        <div class="quiz-feedback correct" id="fb17b">
+          &#10004; Correto! Acesso coalescido combina solicitações de threads vizinhas em poucas transações de memória, aproveitando a largura de banda da GPU.
+        </div>
+        <button class="reveal-btn" onclick="mostrar('fb17a','fb17b')">Mostrar resposta</button>
+      </article>
+
+      <article class="quiz-card">
+        <h4>Tarefa 18 &mdash; Quando a GPU vence a CPU na soma de vetores?</h4>
+        <p>Na comparação entre 8 threads de CPU e GPU V100, em que situação a GPU supera a CPU?</p>
+        <div class="quiz-options">
+          <span class="quiz-option" onclick="resposta(this, false)">Vetores pequenos, por causa do offload</span>
+          <span class="quiz-option" onclick="resposta(this, true)">Vetores grandes, onde banda e paralelismo massivo dominam</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Sempre, independentemente do tamanho</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Nunca, a CPU é mais rápida</span>
+        </div>
+        <div class="quiz-feedback wrong" id="fb18a">
+          &#10060; Vetores pequenos têm o custo de cópia CPU&rarr;GPU como dominante.
+        </div>
+        <div class="quiz-feedback correct" id="fb18b">
+          &#10004; Correto! Para vetores grandes, o custo de cópia é diluído e o paralelismo massivo da GPU supera a CPU.
+        </div>
+        <button class="reveal-btn" onclick="mostrar('fb18a','fb18b')">Mostrar resposta</button>
+      </article>
+
+      <article class="quiz-card">
+        <h4>Tarefa 19 &mdash; O que nsys perfil na GPU?</h4>
+        <p>Na difusão de calor em GPU, qual é o propósito do nsys (NVIDIA Nsight Systems)?</p>
+        <div class="quiz-options">
+          <span class="quiz-option" onclick="resposta(this, false)">Compilar kernels CUDA</span>
+          <span class="quiz-option" onclick="resposta(this, true)">Identificar gargalos de memória e ocupação dos SMs</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Gerar código OpenMP automaticamente</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Substituir o driver da GPU</span>
+        </div>
+        <div class="quiz-feedback wrong" id="fb19a">
+          &#10060; nsys não compila kernels.
+        </div>
+        <div class="quiz-feedback correct" id="fb19b">
+          &#10004; Correto! O nsys profileia a execução da GPU, revelando ocupação dos SMs, uso de memória e gaps entre kernels.
+        </div>
+        <button class="reveal-btn" onclick="mostrar('fb19a','fb19b')">Mostrar resposta</button>
+      </article>
+
+      <article class="quiz-card">
+        <h4>Tarefa 20 &mdash; O que limita o kernel de calor?</h4>
+        <p>Em versões sucessivas do kernel de difusão de calor, qual é o principal gargalo identificado?</p>
+        <div class="quiz-options">
+          <span class="quiz-option" onclick="resposta(this, false)">Frequência de clock da GPU</span>
+          <span class="quiz-option" onclick="resposta(this, true)">Limitações de memória e ocupação dos SMs</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Número de blocos CUDA</span>
+          <span class="quiz-option" onclick="resposta(this, false)">Drivers desatualizados</span>
+        </div>
+        <div class="quiz-feedback wrong" id="fb20a">
+          &#10060; O clock da GPU não é o foco da análise.
+        </div>
+        <div class="quiz-feedback correct" id="fb20b">
+          &#10004; Correto! O kernel de calor é limitado por memória e pela ocupação dos Streaming Multiprocessors (SMs).
+        </div>
+        <button class="reveal-btn" onclick="mostrar('fb20a','fb20b')">Mostrar resposta</button>
+      </article>
+
+    </section>
 
   <footer class="footer-nav">
     <span>DCA3703 &bull; UFRN &bull; Prof. Samuel Xavier de Souza</span>
