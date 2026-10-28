@@ -28,5 +28,5 @@ Implementações, relatórios e lições práticas da disciplina DCA3703 (Progra
 ---
 
 ## Autor
-
+José Felix Rodrigues Anselmo
 
